@@ -14,7 +14,7 @@ class Board():
         initialize the chess board to represent a standard
         starting chess position with pieces on both sides
         """
-        self.board = []
+        self.board = [[' ' for i in range(self.SIZE)] for j in range(self.SIZE)]
         self.start_pos()
         
     
