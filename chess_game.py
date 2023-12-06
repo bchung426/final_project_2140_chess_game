@@ -1,0 +1,272 @@
+#code for the chess pieces
+
+class Board():
+    """
+    A representation of a Chess board
+    which can be updated with legal moves
+    and detect if there is currently a winner.
+
+
+    """
+
+    SIZE = 8
+    EMPTY = ''
+    files = {1:'a', 2:'b', 3:'c', 4:'d', 5:'e', 6:'f', 7:'g', 8:'h'}
+    def __init__(self):
+        """
+        initialize the chess board to represent a standard
+        starting chess position with pieces on both sides
+        """
+        self.board = [['' for i in range(self.SIZE)] for j in range(self.SIZE)]
+        self.start_pos()
+    
+    def print_board(self):
+        """
+        prints the board using '[ ]' as the squares
+
+        the printed board also has the rows and files labeled 8-1 
+        and a-h, respectively
+
+        the board is printed from a point of view of the player using
+        the white pieces (white starting position will always be at the bottom)
+
+        used basically the same stuff from the tictactoe; added stuff in to get 
+        the row/file labels as well as increased the spacing between rows 
+        """
+        self.show = '\n'
+        #♚ ♔ ♖ ♜ ♝ ♗ ♛ ♕ ♞ ♘ ♟ ♙ 
+        self.pieces_w = {Pawn:'♟ ', Rook:'♜ ', Knight:'♞ ', Bishop:'♝ ', King:'♚ ', Queen:'♛ '}
+        self.pieces_b = {Pawn:'♙ ', Rook:'♖ ', Knight:'♘ ', Bishop:'♗ ', King:'♔ ', Queen:'♕ '}
+        for i in range(self.SIZE):
+            #adding the row number labels for the board
+            self.show += str(8-i) + " "
+            for j in range(self.SIZE):
+                if self.board[i][j] == self.EMPTY:
+                    self.show += "[  ] " 
+                    #formatting so that when moves happen the board is still in line with itself
+                    #is only for display purposes, the board will still have self.EMPTY in here and not a space
+                else:
+                    if self.board[i][j].Color == Piece.white:
+                        self.show += "[" + self.pieces_w[type(self.board[i][j])] + "] "
+                    if self.board[i][j].Color == Piece.black:
+                        self.show += "[" + self.pieces_b[type(self.board[i][j])] + "] "
+            if i == 7:
+                self.show += "\n"
+            else: 
+                #using only one '\n' made the board look very clumped - a mi no me gusta
+                self.show += "\n\n"
+        #adding the labels for the files of the board
+        for i in range(1,9):
+            self.show += "   " + self.files[i] + " "
+        print(self.show)
+
+    
+    def start_pos(self):
+        """
+        places the pieces on the board in 
+        the standard starting position
+        """
+        spec_pieces = [Rook,Knight,Bishop,Queen,King,Bishop,Knight,Rook]
+        for i in range(self.SIZE):
+            #pawns
+            self.board[1][i] = Pawn(Pawn.black)
+            self.board[6][i] = Pawn(Pawn.white)
+            #other pieces
+            self.board[0][i] = spec_pieces[i](Piece.black)
+            self.board[7][i] = spec_pieces[i](Piece.white)
+        for i in range(self.SIZE):
+            for j in range(self.SIZE):
+                if self.board[i][j] == self.EMPTY:
+                    pass
+                else:
+                    self.board[i][j].position = (i, j)
+
+
+class Piece():
+    """
+    A parent class for all the different chess pieces
+
+    All pieces have a color; either white or black
+
+    Pieces have a position, which will be represented
+    by a tuple of size 2, with both elements being the
+    indices of the piece in an 8x8 matrix
+
+    ex: the position for the starting white rook in the 'a' file will be
+    represented by a tuple (7, 0) (row 7, column 0). When represented on the board, this
+    will appear to be the column of index 0 (1) and the row of index 7 (1)
+
+    """
+    black = "black"
+    white = "white"
+    def __init__(self,color = "white"):
+        self.Color = color
+        self.position = None
+    
+    def find_moves(self, position, color, increments, board):
+        """
+        returns a list of moves that could be made
+        given a position of a piece, the piece color,
+        and the increments in which the piece moves
+
+        increments is a list of tuples which will denote the
+        different increments that a piece will be able to move in
+
+        this function is only for pieces that can move an infinite 
+        number of spaces (rook, bishop, queen) and will be redefined 
+        for pieces like the king, knight, and pawn
+        """
+        row = position[0]
+        file = position[1]
+        move_list = []
+        for x, y in increments:
+            curr_row = row + x
+            curr_file = file + y
+            for i in range(7):
+                if curr_row > 7 or curr_file > 7 or curr_row < 0 or curr_file < 0:
+                    #any of these values would result in  an illegal move since the 
+                    # piece would no longer be on the board, so shouldn't add it to 
+                    # the list of moves; also the increments would continue moving in
+                    # the direction to be off the board, so should also stop 
+                    # the current increment values
+                    break
+                if board[curr_row][curr_file] == board.EMPTY:
+                    #if there is no piece in the location, should add
+                    # the location to the move list
+                    move_list.append((curr_row,curr_file))
+                
+                #if it runs into a piece of the opposite color, adds the 
+                #square to the move list and goes to the next increment
+                elif board[curr_row][curr_file].Color != color:
+                    move_list.append((curr_row,curr_file))
+                    break
+                #if it runs into a piece of the same color, 
+                #goes to the next increment w/o adding the move
+                elif board[curr_row][curr_file].Color == color:
+                    break
+                #increments
+                curr_row += x 
+                curr_file += y
+        return move_list
+
+
+
+
+    
+class Pawn(Piece):
+    """
+    Pawns can only move in one direction, which is based
+    on what color they are.
+
+    Pawns can only capture diagonally
+
+    The first move for pawns can be either one or two
+    squares forward.
+    """
+    def __init__(self,color = "white"):
+        super().__init__(color)
+        self.moves = 0
+        """
+        if self.Color == self.white:
+            self.direction = -1
+        if self.Color == self.black:
+            self.direction = 1
+        """
+
+    def is_first_move(self):
+        """
+        returns either True or False depending on if the
+        pawn has made a move yet
+        """
+        if self.moves < 1:
+            return True
+        else:
+            return False
+    
+    def available_moves(self, position, board):
+        """
+        returns a list of legal squares where the pawn can move
+
+        if it is the pawn's first move, will be able to move 2 squares
+        in the direction
+
+        will not be able to en passant (unless i have extra time but i cba)
+
+        """
+        move_list = []
+        pos = self.position
+        if self.Color == self.white:
+            if self.is_first_move():
+                #if its the pawns first move, can move two squares
+                for i in range(pos[0] - 1, pos[0] - 3):
+                    if board[i][pos[1]] == board.EMPTY:
+                        #only add the move if the pawn isn't blocked
+                        move_list.append((i, pos[1]))
+                    else:
+                        #if the pawn is being blocked, breaks the loop
+                        break
+            else:
+                if board[pos[0] - 1][pos[1]] == board.EMPTY:
+                    move_list.append((pos[0] - 1, pos[1]))
+            #adding moves for the pawn to capture other pieces
+            if board[pos[0] - 1][pos[1] - 1].Color == self.black:
+                move_list.append((pos[0] - 1, pos[1] - 1))
+            if board[pos[0] - 1][pos[1] + 1].Color == self.black:
+                move_list.append((pos[0] - 1, pos[1] + 1))
+
+        if self.Color == self.black:
+            if self.is_first_move():
+                for i in range(pos[0] + 1, pos[0] + 3):
+                    move_list.append((i, pos[1]))
+                else:
+                    move_list.append((pos[0] + 1, pos[1]))
+
+
+
+class Rook(Piece):
+    #can only move horizontally/vertically
+    r_increments = [(1,0), (-1,0), (0,1), (0,-1)]
+    def __init__(self,color):
+        super().__init__(color)
+
+    def available_moves(self, position, board):
+        """
+        returns a list containing tuples of available moves for a rook.
+        takes in parameters for the position and the board
+        """
+        return self.find_moves(position, self.Color, self.r_increments, board)
+        
+
+class Knight(Piece):
+    def __init__(self,color):
+        super().__init__(color)
+
+class Bishop(Piece):
+    #can only move diagonally
+    b_increments = [(1,1), (1,-1), (-1,1), (-1,-1)]
+    def __init__(self,color):
+        super().__init__(color)
+
+    def available_moves(self, position, board, color = None):
+        color = self.Color
+        return self.find_moves(position, color, self.b_increments, board)
+class King(Piece):
+    #same directions as the queen, but can only move 1 square
+    def __init__(self,color):
+        super().__init__(color)
+
+class Queen(Piece):
+    #can move either horizontally/vertically or diagonally
+    q_increments = [(1,1), (1,-1), (-1,1), (-1,-1), (1,0), (-1,0), (0,1), (0,-1)]
+    def __init__(self,color):
+        super().__init__(color)
+
+    def available_moves(self, position, board, color = None):
+        color = self.Color
+        return self.find_moves(position, color, self.q_increments, board)
+a = Board()
+a.print_board()
+print(a.board[6][3].position)
+print(type(a.board[6][4]))
+#print(a.board)
+#print(a.board[0][0].Color)
