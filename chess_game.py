@@ -22,19 +22,22 @@ class Board():
     
     def print_board(self):
         """
-        prints the board using '[ ]' as the squares
-
-        the printed board also has the rows and files labeled 8-1 
-        and a-h, respectively
+        prints the chess board along with the labeled rows and files
 
         the board is printed from a point of view of the player using
-        the white pieces (white starting position will always be at the bottom)
+        the white pieces (white starting position will always appear at the bottom)
 
         used basically the same stuff from the tictactoe; added stuff in to get 
-        the row/file labels as well as increased the spacing between rows 
+        the row/file labels as well as increased the spacing between rows b/c the spacing with
+        the chess piece characters are muy interesante 
         """
+        #initial line of space
         self.show = '\n'
         #♚ ♔ ♖ ♜ ♝ ♗ ♛ ♕ ♞ ♘ ♟ ♙ 
+        """   put in README maybe! :
+        the pieces_w used "black pieces" but since the background of vscode is black, the "white pieces"
+        appear black since they are just a hollow outline of the piece, so the terminal you are using
+        might make these look different   """
         self.pieces_w = {Pawn:'♟ ', Rook:'♜ ', Knight:'♞ ', Bishop:'♝ ', King:'♚ ', Queen:'♛ '}
         self.pieces_b = {Pawn:'♙ ', Rook:'♖ ', Knight:'♘ ', Bishop:'♗ ', King:'♔ ', Queen:'♕ '}
         for i in range(self.SIZE):
@@ -43,8 +46,8 @@ class Board():
             for j in range(self.SIZE):
                 if self.board[i][j] == self.EMPTY:
                     self.show += "[  ] " 
-                    #formatting so that when moves happen the board is still in line with itself
-                    #is only for display purposes, the board will still have self.EMPTY in here and not a space
+                    #formatting so that the empty squares will take up the same amount of space as
+                    #the squares with pieces in them, so the formatting doesn't hurt ur eyes and brain
                 else:
                     if self.board[i][j].Color == Piece.white:
                         self.show += "[" + self.pieces_w[type(self.board[i][j])] + "] "
@@ -74,6 +77,7 @@ class Board():
             #other pieces
             self.board[0][i] = spec_pieces[i](Piece.black)
             self.board[7][i] = spec_pieces[i](Piece.white)
+        self.board[4][1] = Queen(Queen.black)
         for i in range(self.SIZE):
             for j in range(self.SIZE):
                 if self.board[i][j] == self.EMPTY:
@@ -130,7 +134,7 @@ class Piece():
                     # the direction to be off the board, so should also stop 
                     # the current increment values
                     break
-                if board[curr_row][curr_file] == board.EMPTY:
+                if board[curr_row][curr_file] == Board.EMPTY:
                     #if there is no piece in the location, should add
                     # the location to the move list
                     move_list.append((curr_row,curr_file))
@@ -191,28 +195,30 @@ class Pawn(Piece):
         in the direction
 
         will not be able to en passant (unless i have extra time but i cba)
-
+        !! seems to work, as well with the capture moves
         """
         move_list = []
-        pos = self.position
+        pos = position
         if self.Color == self.white:
             if self.is_first_move():
                 #if its the pawns first move, can move two squares
-                for i in range(pos[0] - 1, pos[0] - 3):
-                    if board[i][pos[1]] == board.EMPTY:
+                for i in range(1,3):
+                    if board[pos[0] - i][pos[1]] == Board.EMPTY:
                         #only add the move if the pawn isn't blocked
-                        move_list.append((i, pos[1]))
+                        move_list.append((pos[0] - i, pos[1]))
                     else:
                         #if the pawn is being blocked, breaks the loop
                         break
             else:
-                if board[pos[0] - 1][pos[1]] == board.EMPTY:
+                if board[pos[0] - 1][pos[1]] == Board.EMPTY:
                     move_list.append((pos[0] - 1, pos[1]))
             #adding moves for the pawn to capture other pieces
-            if board[pos[0] - 1][pos[1] - 1].Color == self.black:
-                move_list.append((pos[0] - 1, pos[1] - 1))
-            if board[pos[0] - 1][pos[1] + 1].Color == self.black:
-                move_list.append((pos[0] - 1, pos[1] + 1))
+            if board[pos[0] - 1][pos[1] - 1]:
+                if board[pos[0] - 1][pos[1] - 1].Color == self.black:
+                    move_list.append((pos[0] - 1, pos[1] - 1))
+            if board[pos[0] - 1][pos[1] + 1]:
+                if board[pos[0] - 1][pos[1] + 1].Color == self.black:
+                    move_list.append((pos[0] - 1, pos[1] + 1))
 
         if self.Color == self.black:
             if self.is_first_move():
@@ -220,8 +226,11 @@ class Pawn(Piece):
                     move_list.append((i, pos[1]))
                 else:
                     move_list.append((pos[0] + 1, pos[1]))
+        return move_list
 
-
+class Knight(Piece):
+    def __init__(self,color):
+        super().__init__(color)
 
 class Rook(Piece):
     #can only move horizontally/vertically
@@ -233,13 +242,9 @@ class Rook(Piece):
         """
         returns a list containing tuples of available moves for a rook.
         takes in parameters for the position and the board
+        !! seems to work!
         """
         return self.find_moves(position, self.Color, self.r_increments, board)
-        
-
-class Knight(Piece):
-    def __init__(self,color):
-        super().__init__(color)
 
 class Bishop(Piece):
     #can only move diagonally
@@ -247,9 +252,13 @@ class Bishop(Piece):
     def __init__(self,color):
         super().__init__(color)
 
-    def available_moves(self, position, board, color = None):
-        color = self.Color
-        return self.find_moves(position, color, self.b_increments, board)
+    def available_moves(self, position, board):
+        """
+        returns a list containing tuples of available moves for a bishop.
+        takes in parameters for the position and the board
+        !! seems to work!
+        """
+        return self.find_moves(position, self.Color, self.b_increments, board)
 class King(Piece):
     #same directions as the queen, but can only move 1 square
     def __init__(self,color):
@@ -261,12 +270,19 @@ class Queen(Piece):
     def __init__(self,color):
         super().__init__(color)
 
-    def available_moves(self, position, board, color = None):
-        color = self.Color
-        return self.find_moves(position, color, self.q_increments, board)
+    def available_moves(self, position, board):
+        """
+        returns a list containing tuples of available moves for a queen.
+        takes in parameters for the position and the board
+        !! seems to work!
+        """
+        return self.find_moves(position, self.Color, self.q_increments, board)
 a = Board()
 a.print_board()
-print(a.board[6][3].position)
-print(type(a.board[6][4]))
+print(a.board[4][1].position)
+print(a.board[4][1].Color)
+print(type(a.board[4][1]))
+
+print(a.board[4][1].available_moves(a.board[4][1].position, a.board))
 #print(a.board)
 #print(a.board[0][0].Color)
