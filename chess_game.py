@@ -77,7 +77,7 @@ class Board():
             #other pieces
             self.board[0][i] = spec_pieces[i](Piece.black)
             self.board[7][i] = spec_pieces[i](Piece.white)
-        self.board[4][1] = Queen(Queen.black)
+        #self.board[4][1] = Knight(Knight.white) #line i test methods for pieces with
         for i in range(self.SIZE):
             for j in range(self.SIZE):
                 if self.board[i][j] == self.EMPTY:
@@ -117,8 +117,7 @@ class Piece():
         different increments that a piece will be able to move in
 
         this function is only for pieces that can move an infinite 
-        number of spaces (rook, bishop, queen) and will be redefined 
-        for pieces like the king, knight, and pawn
+        number of spaces (rook, bishop, queen)
         """
         row = position[0]
         file = position[1]
@@ -167,9 +166,9 @@ class Pawn(Piece):
     The first move for pawns can be either one or two
     squares forward.
     """
-    def __init__(self,color = "white"):
+    def __init__(self, color = "white", moves = 0):
         super().__init__(color)
-        self.moves = 0
+        self.moves = moves
         """
         if self.Color == self.white:
             self.direction = -1
@@ -222,15 +221,48 @@ class Pawn(Piece):
 
         if self.Color == self.black:
             if self.is_first_move():
+                #if its the pawns first move, can move two squares
                 for i in range(pos[0] + 1, pos[0] + 3):
-                    move_list.append((i, pos[1]))
-                else:
+                    #checks if the squares are empty
+                    if board[pos[i]][pos[1]] == Board.EMPTY:
+                        move_list.append((i, pos[1]))
+                    else:
+                        break
+            else: #if it isn't first move, will only move one square
+                if board[pos[0] + 1][pos[1]] == Board.EMPTY:
                     move_list.append((pos[0] + 1, pos[1]))
+            #adding moves for the pawn to capture other pieces
+            if board[pos[0] + 1][pos[1] + 1].Color == self.white:
+                move_list.append((pos[0] + 1, pos[1] + 1))
+            if board[pos[0] + 1][pos[1] - 1].Color == self.white:
+                move_list.append((pos[0] + 1, pos[1] - 1))
         return move_list
 
 class Knight(Piece):
+    #a list for the tuples for the knight moves (knight displacement)
+    knight_disp = [(2, 1), (2, -1), (-2, 1), (-2, -1), (1, 2), (1, -2), (-1, 2), (-1, -2)]
     def __init__(self,color):
         super().__init__(color)
+    def available_moves(self, position, board):
+        """
+        returns a list containing tuples of available moves for a knight.
+        takes in parameters for the position and the board
+        !!seems to work
+        """
+        move_list = []
+        pos = position
+        for x, y in self.knight_disp:
+            if pos[0] + x > 7 or pos[1] + y > 7 or pos[0] + x < 0 or pos[1] + y < 0:
+                continue
+            if board[pos[0] + x][pos[1] + y] == Board.EMPTY:
+                move_list.append((pos[0] + x, pos[1] + y))
+            elif board[pos[0] + x][pos[1] + y].Color == self.Color:
+                continue
+            elif board[pos[0] + x][pos[1] + y].Color != self.Color:
+                move_list.append((pos[0] + x, pos[1] + y))
+        return move_list
+                
+
 
 class Rook(Piece):
     #can only move horizontally/vertically
@@ -260,9 +292,19 @@ class Bishop(Piece):
         """
         return self.find_moves(position, self.Color, self.b_increments, board)
 class King(Piece):
+    """
+    need to add methods for check, as well as methods for if other color pieces
+    will be able to see the king if it moves to a certain square in the Board class!!!
+    """
     #same directions as the queen, but can only move 1 square
+    king_disp = [(1, 1), (1, -1), (-1, 1), (-1, -1), (1, 0), (-1, 0), (0, 1), (0, -1)]
     def __init__(self,color):
         super().__init__(color)
+    def available_moves(self, position, board):
+        """
+        returns a list containing tuples of available moves for a king.
+        takes in parameters for the position and the baod
+        """
 
 class Queen(Piece):
     #can move either horizontally/vertically or diagonally
