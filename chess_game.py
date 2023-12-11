@@ -84,6 +84,24 @@ class Board():
                     pass
                 else:
                     self.board[i][j].position = (i, j)
+    def is_occupied(self, pos):
+        """
+        Returns True if there is a piece at a certain position, and 
+        False if the index is not on the board or if position is empty
+        """
+        row = pos[0]
+        file = pos[1]
+        if row > 7 or file > 7 or row < 0 or file < 0:
+            return False
+        if self.board[row][pos] == self.EMPTY:
+            return False
+        else:
+            return True
+    def get_color(self, pos):
+        """
+        Returns the color of a piece at a certain position
+        """
+        return self.board[pos[0]][pos[1]].Color
 
 
 class Piece():
@@ -326,8 +344,8 @@ class Game():
     """
     white_pieces = "white"
     black_pieces = "black"
-    #dictionaries to convert the player's input into the 
-    # position of the piece in the board: file a is column of index 0 etc
+    #dictionaries to convert the player's input into the position
+    # of the piece in the board: file a is column of index 0 etc.
     file_dict = {'a':0, 'b':1, 'c':2, 'd':3, 'e':4, 'f':5, 'g':6, 'h':7}
     row_dict = {'1':7, '2':6, '3':5, '4':4, '5':3, '6':2, '7':1, '8':0}
     def __init__(self):
@@ -340,58 +358,100 @@ class Game():
          - modifying the board state
          - ending the current player's turn
         """
+        move = () 
+        piece = ()
+        while not self.board.is_occupied(piece) or self.board.get_color(piece) != self.turn:
+            self.board.print_board()
+            piece = self.get_piece()
+        
+        while move not in self.board[piece[0]][piece[1]].available_moves(piece, self.board):
+            self.board.print_board()
+            move = self.get_move()
+        
+
+        self.board.place(move)
+        if self.turn == Game.X_PLAYER:
+            self.turn = Game.O_PLAYER
+        else:
+            self.turn = Game.X_PLAYER
+        while self.get_piece():
+            piece = self.get_piece()
     
     def get_piece(self):
         """
         Gets the first part of the move from the player whose turn
         it is by asking for the position of the piece they want to move
+
+        returns the move's corresponding position as a tuple with two
+        elements, the index of the row and the file on the board
         """
+        row_input = None
+        file_input = None
         #white pieces turn
         if self.turn == Game.white_pieces: 
             print("It is white's turn to move.")
-
             #get the piece's position that the player wants to move
-            file_input = str(input("Please enter the file of the piece: "))
-            row_input = str(input("Please enter the row the piece: "))
-
+            while row_input not in Game.row_dict or file_input not in Game.file_dict:
+                file_input = str(input("Please enter the file of the piece: "))
+                row_input = str(input("Please enter the row the piece: "))
+                if row_input not in Game.row_dict or file_input not in Game.file_dict:
+                    print("The position you entered is invalid. \n")
+            row = Game.row_dict[row_input]
+            file = Game.file_dict[file_input]
             #putting the inputs into a tuple for the move
-            move = (row_input, file_input)
+            piece = (row, file)
 
         #black pieces turn
         if self.turn == Game.black_pieces: 
             print("It is black's turn to move.")   
-
-            file_input = str(input("Please enter the file of the piece: "))
-            row_input = str(input("Please enter the row the piece: "))
-
+            while row_input not in Game.row_dict or file_input not in Game.file_dict:
+                file_input = str(input("Please enter the file of the piece: "))
+                row_input = str(input("Please enter the row the piece: "))
+                if row_input not in Game.row_dict or file_input not in Game.file_dict:
+                    print("The position you entered is invalid. \n")
+            row = Game.row_dict[row_input]
+            file = Game.file_dict[file_input]
             #putting the inputs into a tuple for the move
-            move = (row_input, file_input)
-        #returns the move
-        return move
+            piece = (row, file)
+        #returns the piece tuple
+        return piece
     def get_move(self):
         """
         Gets the second part of the move from the player whose turn it 
         is by asking for the position they want to move their piece to.
-        """
-        #white pieces turn
-        if self.turn == Game.white_pieces:
-            #get the piece's position that the player wants to move
-            file_input = str(input("Please enter the file you want to move to: "))
-            row_input = str(input("Please enter the row you want to move to: "))
 
+        returns the move's corresponding position as a tuple with two
+        elements, the index of the row and the file on the board
+        """
+        row_input = None
+        file_input = None
+        #white pieces turn
+        if self.turn == Game.white_pieces: 
+            print("Where do you want to move the piece to?")
+            #get the position the player wants to move to
+            while row_input not in Game.row_dict or file_input not in Game.file_dict:
+                file_input = str(input("Please enter the file of the piece: "))
+                row_input = str(input("Please enter the row the piece: "))
+                if row_input not in Game.row_dict or file_input not in Game.file_dict:
+                    print("The position you entered is invalid. \n")
+            row = Game.row_dict[row_input]
+            file = Game.file_dict[file_input]
             #putting the inputs into a tuple for the move
-            move = (row_input, file_input)
+            move = (row, file)
 
         #black pieces turn
         if self.turn == Game.black_pieces: 
-            print("It is black's turn to move.")   
-
-            file_input = str(input("Please enter the file you want to move to: "))
-            row_input = str(input("Please enter the row you want to move to: "))
-
+            print("Where do you want to move the piece to?") 
+            while row_input not in Game.row_dict or file_input not in Game.file_dict:
+                file_input = str(input("Please enter the file of the piece: "))
+                row_input = str(input("Please enter the row the piece: "))
+                if row_input not in Game.row_dict or file_input not in Game.file_dict:
+                    print("The position you entered is invalid. \n")
+            row = Game.row_dict[row_input]
+            file = Game.file_dict[file_input]
             #putting the inputs into a tuple for the move
-            move = (row_input, file_input)
-        #returns the move
+            move = (row, file)
+        #returns the piece tuple
         return move
 
     def in_check(self):
