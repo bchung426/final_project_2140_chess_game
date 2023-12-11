@@ -319,6 +319,36 @@ class Queen(Piece):
         !! seems to work!
         """
         return self.find_moves(position, self.Color, self.q_increments, board)
+
+class Game():
+    """
+    Class to control the state of the Chess game. 
+    """
+    white_pieces = "white"
+    black_pieces = "black"
+    def __init__(self):
+        self.board = Board()
+        self.turn = Game.white_pieces
+    def play_turn(self):
+        """
+        This method executes a single turn by:
+         - prompting the user for a legal move
+         - modifying the board state
+         - ending the current player's turn
+        """
+    
+    def get_move(self):
+        """
+        gets the move from the player whose turn it is
+        """
+    def in_check(self):
+        """
+        checks if either king piece is in check. if it detects a 
+        king in check, it will thendetermine if there is checkmate,
+        if there isn't checkmate, will tell the player whose King
+        is in check that they are in check
+        """
+
 a = Board()
 a.print_board()
 print(a.board[4][1].position)
