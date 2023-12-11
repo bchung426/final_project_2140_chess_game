@@ -1,5 +1,4 @@
 #code for the chess pieces
-
 class Board():
     """
     A representation of a Chess board
@@ -8,7 +7,6 @@ class Board():
 
 
     """
-
     SIZE = 8
     EMPTY = ''
     files = {1:'a', 2:'b', 3:'c', 4:'d', 5:'e', 6:'f', 7:'g', 8:'h'}
@@ -62,7 +60,38 @@ class Board():
         for i in range(1,9):
             self.show += "   " + self.files[i] + " "
         print(self.show)
+    
+    def place_move(self, pos, move):
+        """
+        Updates the board given the position of the piece being moved
+        and the move. Only places the move if the move is legal.
+        Updates the previous spot on the board to become empty
 
+        Returns: A copy of the board state after executing
+        the move, or if the move is illegal, a copy of the current board state.
+
+        pos - a tuple representing the position of the piece being moved
+        move - a tuple representing the position the piece is moving to
+        """
+        #only plays the move if it is a legal move for that piece
+        if move in self.board[pos[0]][pos[1]].available_moves(self.board):
+            self.board[move[0]][move[1]] = self.board[pos[0]][pos[1]]
+            self.board[pos[0]][pos[1]] = self.EMPTY
+            self.update_pos()
+
+        else:
+            return False
+        
+    def update_pos(self):
+        """
+        updates the position of every piece in the board
+        """
+        for i in range(self.SIZE):
+            for j in range(self.SIZE):
+                if self.board[i][j] == self.EMPTY:
+                    pass
+                else:
+                    self.board[i][j].position = (i, j)
     
     def start_pos(self):
         """
@@ -77,13 +106,9 @@ class Board():
             #other pieces
             self.board[0][i] = spec_pieces[i](Piece.black)
             self.board[7][i] = spec_pieces[i](Piece.white)
-        #self.board[4][1] = Knight(Knight.white) #line i test methods for pieces with
-        for i in range(self.SIZE):
-            for j in range(self.SIZE):
-                if self.board[i][j] == self.EMPTY:
-                    pass
-                else:
-                    self.board[i][j].position = (i, j)
+        self.board[4][1] = Knight(Knight.white) #line i test methods for pieces with
+        self.update_pos()
+
     def is_occupied(self, pos):
         """
         Returns True if there is a piece at a certain position, and 
@@ -169,10 +194,6 @@ class Piece():
                 curr_row += x 
                 curr_file += y
         return move_list
-
-
-
-
     
 class Pawn(Piece):
     """
@@ -204,7 +225,7 @@ class Pawn(Piece):
         else:
             return False
     
-    def available_moves(self, position, board):
+    def available_moves(self, board):
         """
         returns a list of legal squares where the pawn can move
 
@@ -215,7 +236,7 @@ class Pawn(Piece):
         !! seems to work, as well with the capture moves
         """
         move_list = []
-        pos = position
+        pos = self.position
         if self.Color == self.white:
             if self.is_first_move():
                 #if its the pawns first move, can move two squares
@@ -261,14 +282,14 @@ class Knight(Piece):
     knight_disp = [(2, 1), (2, -1), (-2, 1), (-2, -1), (1, 2), (1, -2), (-1, 2), (-1, -2)]
     def __init__(self,color):
         super().__init__(color)
-    def available_moves(self, position, board):
+    def available_moves(self, board):
         """
         returns a list containing tuples of available moves for a knight.
         takes in parameters for the position and the board
         !!seems to work
         """
         move_list = []
-        pos = position
+        pos = self.position
         for x, y in self.knight_disp:
             if pos[0] + x > 7 or pos[1] + y > 7 or pos[0] + x < 0 or pos[1] + y < 0:
                 continue
@@ -288,13 +309,13 @@ class Rook(Piece):
     def __init__(self,color):
         super().__init__(color)
 
-    def available_moves(self, position, board):
+    def available_moves(self, board):
         """
         returns a list containing tuples of available moves for a rook.
         takes in parameters for the position and the board
         !! seems to work!
         """
-        return self.find_moves(position, self.Color, self.r_increments, board)
+        return self.find_moves(self.position, self.Color, self.r_increments, board)
 
 class Bishop(Piece):
     #can only move diagonally
@@ -302,13 +323,13 @@ class Bishop(Piece):
     def __init__(self,color):
         super().__init__(color)
 
-    def available_moves(self, position, board):
+    def available_moves(self, board):
         """
         returns a list containing tuples of available moves for a bishop.
         takes in parameters for the position and the board
         !! seems to work!
         """
-        return self.find_moves(position, self.Color, self.b_increments, board)
+        return self.find_moves(self.position, self.Color, self.b_increments, board)
 class King(Piece):
     """
     need to add methods for check, as well as methods for if other color pieces
@@ -318,11 +339,12 @@ class King(Piece):
     king_disp = [(1,1), (1,-1), (-1,1), (-1,-1), (1,0), (-1,0), (0,1), (0,-1)]
     def __init__(self,color):
         super().__init__(color)
-    def available_moves(self, position, board):
+    def available_moves(self, board):
         """
         returns a list containing tuples of available moves for a king.
         takes in parameters for the position and the baod
         """
+        pos = self.position
 
 class Queen(Piece):
     #can move either horizontally/vertically or diagonally
@@ -330,13 +352,13 @@ class Queen(Piece):
     def __init__(self,color):
         super().__init__(color)
 
-    def available_moves(self, position, board):
+    def available_moves(self, board):
         """
         returns a list containing tuples of available moves for a queen
         takes in parameters for the position and the board
         !! seems to work!
         """
-        return self.find_moves(position, self.Color, self.q_increments, board)
+        return self.find_moves(self.position, self.Color, self.q_increments, board)
 
 class Game():
     """
@@ -354,8 +376,9 @@ class Game():
     def play_turn(self):
         """
         This method executes a single turn by:
+         - prompting the user for the position of the piece to move
          - prompting the user for a legal move
-         - modifying the board state
+         - modifying the board
          - ending the current player's turn
         """
         move = () 
@@ -364,18 +387,15 @@ class Game():
             self.board.print_board()
             piece = self.get_piece()
         
-        while move not in self.board[piece[0]][piece[1]].available_moves(piece, self.board):
+        while move not in self.board[piece[0]][piece[1]].available_moves(self.board):
             self.board.print_board()
             move = self.get_move()
         
-
-        self.board.place(move)
-        if self.turn == Game.X_PLAYER:
-            self.turn = Game.O_PLAYER
+        self.board.place_move(piece, move)
+        if self.turn == Game.white_pieces:
+            self.turn = Game.black_pieces
         else:
-            self.turn = Game.X_PLAYER
-        while self.get_piece():
-            piece = self.get_piece()
+            self.turn = Game.white_pieces
     
     def get_piece(self):
         """
@@ -457,10 +477,24 @@ class Game():
     def in_check(self):
         """
         checks if either king piece is in check. if it detects a 
-        king in check, it will thendetermine if there is checkmate,
-        if there isn't checkmate, will tell the player whose King
-        is in check that they are in check
+        king in check, it will then determine if there is checkmate,
+        
+        If a king is in check, prints which king is in check
+        and returns True
+
+        TODO: check if the king is in checkmate! maybe in a separate method!
         """
+        for p in self.board:
+            if p == self.board.EMPTY:
+                continue
+            else:
+                for i in p.available_moves(self.board):
+                    if self.board[i[0]][i[1]] == self.board.EMPTY:
+                        continue
+                    if type(self.board[i[0]][i[1]]) == King:
+                        print("The {} king is in check".format(self.board[i[0]][i[1]].Color))
+                        return True
+        return False
 
 a = Board()
 a.print_board()
@@ -468,6 +502,6 @@ print(a.board[4][1].position)
 print(a.board[4][1].Color)
 print(type(a.board[4][1]))
 
-print(a.board[4][1].available_moves(a.board[4][1].position, a.board))
+print(a.board[4][1].available_moves(a.board))
 #print(a.board)
 #print(a.board[0][0].Color)
