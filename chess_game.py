@@ -297,7 +297,7 @@ class King(Piece):
     will be able to see the king if it moves to a certain square in the Board class!!!
     """
     #same directions as the queen, but can only move 1 square
-    king_disp = [(1, 1), (1, -1), (-1, 1), (-1, -1), (1, 0), (-1, 0), (0, 1), (0, -1)]
+    king_disp = [(1,1), (1,-1), (-1,1), (-1,-1), (1,0), (-1,0), (0,1), (0,-1)]
     def __init__(self,color):
         super().__init__(color)
     def available_moves(self, position, board):
@@ -314,7 +314,7 @@ class Queen(Piece):
 
     def available_moves(self, position, board):
         """
-        returns a list containing tuples of available moves for a queen.
+        returns a list containing tuples of available moves for a queen
         takes in parameters for the position and the board
         !! seems to work!
         """
@@ -326,6 +326,10 @@ class Game():
     """
     white_pieces = "white"
     black_pieces = "black"
+    #dictionaries to convert the player's input into the 
+    # position of the piece in the board: file a is column of index 0 etc
+    file_dict = {'a':0, 'b':1, 'c':2, 'd':3, 'e':4, 'f':5, 'g':6, 'h':7}
+    row_dict = {'1':7, '2':6, '3':5, '4':4, '5':3, '6':2, '7':1, '8':0}
     def __init__(self):
         self.board = Board()
         self.turn = Game.white_pieces
@@ -337,10 +341,59 @@ class Game():
          - ending the current player's turn
         """
     
+    def get_piece(self):
+        """
+        Gets the first part of the move from the player whose turn
+        it is by asking for the position of the piece they want to move
+        """
+        #white pieces turn
+        if self.turn == Game.white_pieces: 
+            print("It is white's turn to move.")
+
+            #get the piece's position that the player wants to move
+            file_input = str(input("Please enter the file of the piece: "))
+            row_input = str(input("Please enter the row the piece: "))
+
+            #putting the inputs into a tuple for the move
+            move = (row_input, file_input)
+
+        #black pieces turn
+        if self.turn == Game.black_pieces: 
+            print("It is black's turn to move.")   
+
+            file_input = str(input("Please enter the file of the piece: "))
+            row_input = str(input("Please enter the row the piece: "))
+
+            #putting the inputs into a tuple for the move
+            move = (row_input, file_input)
+        #returns the move
+        return move
     def get_move(self):
         """
-        gets the move from the player whose turn it is
+        Gets the second part of the move from the player whose turn it 
+        is by asking for the position they want to move their piece to.
         """
+        #white pieces turn
+        if self.turn == Game.white_pieces:
+            #get the piece's position that the player wants to move
+            file_input = str(input("Please enter the file you want to move to: "))
+            row_input = str(input("Please enter the row you want to move to: "))
+
+            #putting the inputs into a tuple for the move
+            move = (row_input, file_input)
+
+        #black pieces turn
+        if self.turn == Game.black_pieces: 
+            print("It is black's turn to move.")   
+
+            file_input = str(input("Please enter the file you want to move to: "))
+            row_input = str(input("Please enter the row you want to move to: "))
+
+            #putting the inputs into a tuple for the move
+            move = (row_input, file_input)
+        #returns the move
+        return move
+
     def in_check(self):
         """
         checks if either king piece is in check. if it detects a 
