@@ -106,7 +106,7 @@ class Board():
             #other pieces
             self.board[0][i] = spec_pieces[i](Piece.black)
             self.board[7][i] = spec_pieces[i](Piece.white)
-        #self.board[4][0] = King(King.white) #line i test methods for pieces with
+        self.board[3][0] = King(King.white) #line i test methods for pieces with
         self.update_pos()
 
     def is_occupied(self, pos):
@@ -371,7 +371,67 @@ class King(Piece):
                 continue
             elif board[pos[0] + x][pos[1] + y].Color != self.Color:
                 move_list.append((pos[0] + x, pos[1] + y))
-        move_list = Game.line_of_sight(move_list, self.Color)
+        move_list = self.line_of_sight(move_list, self.Color, board)
+        return move_list
+    def line_of_sight(self, moves, color, board):
+        """
+        takes in a list of moves as a parameter (a list of tuples)
+        and checks all the pieces on the board to see if any pieces of
+        the opposite color would have line of sight of any of the squares
+
+        also takes in the color as a parameter so it can check
+        for the opposite color
+
+        the method is for the king, and is meant to return a new list of moves
+        with these squares that would be in line of sight removed.
+        TODO: make a new method for the pawn that returns the 2 squares
+        for it to take diagonally, use this to check the pawns line of sight
+        on a king's moves. also doing this for the king
+        """
+        bad_moves = []
+        for m in moves:
+            for l in board:
+                for p in l:
+                    if p == Board.EMPTY:
+                        pass
+                    else:
+                        if p.Color == color:
+                            pass
+                        else:
+                            if type(p) == Pawn:
+                                #pawn capturing moves
+                                return 0
+                            elif type(p) == King:
+                                if m in p.king_los:
+                                    bad_moves.append(m)
+                            elif m in p.available_moves(board):
+                                bad_moves.append(m)
+        if len(bad_moves) == 0:
+            return moves
+        else:
+            for i in bad_moves:
+                moves.remove(i)
+        return moves
+    def king_los(self, board):
+        """
+        the same exact function as the King.available_moves, except
+        it will not remove moves from the list of moves given line
+        of sight. 
+        Used in the line_of_sight method to potentially remove moves
+        due to the other king
+        """
+        move_list = []
+        pos = self.position
+        for x, y in self.king_disp:
+            #keeping the moves in bounds
+            if pos[0] + x > 7 or pos[1] + y > 7 or pos[0] + x < 0 or pos[1] + y < 0:
+                continue
+            if board[pos[0] + x][pos[1] + y] == Board.EMPTY: #and the method for line of sight
+                move_list.append((pos[0] + x, pos[1] + y))
+            elif board[pos[0] + x][pos[1] + y].Color == self.Color:
+                continue
+            elif board[pos[0] + x][pos[1] + y].Color != self.Color:
+                move_list.append((pos[0] + x, pos[1] + y))
         return move_list
 
 class Queen(Piece):
@@ -523,44 +583,15 @@ class Game():
                         print("The {} king is in check".format(self.board[i[0]][i[1]].Color))
                         return True
         return False
-    def line_of_sight(self, moves, color):
-        """
-        takes in a list of moves as a parameter (a list of tuples)
-        and checks all the pieces on the board to see if any pieces of
-        the opposite color would have line of sight of any of the squares
-
-        also takes in the color as a parameter so it can check
-        for the opposite color
-
-        the method is for the king, and is meant to return a new list of moves
-        with these squares that would be in line of sight removed.
-        """
-        bad_moves = []
-        for m in moves:
-            for p in self.board:
-                if p == self.board.EMPTY:
-                    pass
-                else:
-                    if p.Color == color:
-                        pass
-                    else:
-                        if m in p.available_moves(self.board):
-                            bad_moves.append(m)
-        if len(bad_moves) == 0:
-            return moves
-        else:
-            for i in bad_moves:
-                moves.remove(i)
-        return moves
                       
 
 a = Board()
 a.print_board()
-"""
-print(a.board[4][0].position)
-print(a.board[4][0].Color)
-print(type(a.board[4][0]))
 
-print(a.board[4][0].available_moves(a.board))"""
+print(a.board[3][0].position)
+print(a.board[3][0].Color)
+print(type(a.board[3][0]))
+
+print(a.board[3][0].available_moves(a.board))
 #print(a.board)
 #print(a.board[0][0].Color)
