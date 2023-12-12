@@ -106,7 +106,7 @@ class Board():
             #other pieces
             self.board[0][i] = spec_pieces[i](Piece.black)
             self.board[7][i] = spec_pieces[i](Piece.white)
-        self.board[4][0] = King(King.white) #line i test methods for pieces with
+        #self.board[4][0] = King(King.white) #line i test methods for pieces with
         self.update_pos()
 
     def is_occupied(self, pos):
@@ -268,10 +268,10 @@ class Pawn(Piece):
         if self.Color == self.black:
             if self.is_first_move():
                 #if its the pawns first move, can move two squares
-                for i in range(pos[0] + 1, pos[0] + 3):
+                for i in range(1, 3):
                     #checks if the squares are empty
-                    if board[pos[i]][pos[1]] == Board.EMPTY:
-                        move_list.append((i, pos[1]))
+                    if board[pos[0] + i][pos[1]] == Board.EMPTY:
+                        move_list.append((pos[0] + i, pos[1]))
                     else:
                         break
             else: #if it isn't first move, will only move one square
@@ -281,11 +281,13 @@ class Pawn(Piece):
             #adding moves for the pawn to capture other pieces
             if pos[0] < 7:
                 if pos[1] < 7:
-                    if board[pos[0] + 1][pos[1] + 1].Color == self.white:
-                        move_list.append((pos[0] + 1, pos[1] + 1))
+                    if board[pos[0] + 1][pos[1] + 1]:
+                        if board[pos[0] + 1][pos[1] + 1].Color == self.white:
+                            move_list.append((pos[0] + 1, pos[1] + 1))
                 if pos[1] > 0:
-                    if board[pos[0] + 1][pos[1] - 1].Color == self.white:
-                        move_list.append((pos[0] + 1, pos[1] - 1))
+                    if board[pos[0] + 1][pos[1] - 1]:
+                        if board[pos[0] + 1][pos[1] - 1].Color == self.white:
+                            move_list.append((pos[0] + 1, pos[1] - 1))
         return move_list
 
 class Knight(Piece):
@@ -523,11 +525,11 @@ class Game():
 
 a = Board()
 a.print_board()
-
+"""
 print(a.board[4][0].position)
 print(a.board[4][0].Color)
 print(type(a.board[4][0]))
 
-print(a.board[4][0].available_moves(a.board))
+print(a.board[4][0].available_moves(a.board))"""
 #print(a.board)
 #print(a.board[0][0].Color)
