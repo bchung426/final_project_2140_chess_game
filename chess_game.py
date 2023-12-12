@@ -106,7 +106,7 @@ class Board():
             #other pieces
             self.board[0][i] = spec_pieces[i](Piece.black)
             self.board[7][i] = spec_pieces[i](Piece.white)
-        self.board[4][1] = Knight(Knight.white) #line i test methods for pieces with
+        self.board[4][0] = King(King.white) #line i test methods for pieces with
         self.update_pos()
 
     def is_occupied(self, pos):
@@ -248,15 +248,22 @@ class Pawn(Piece):
                         #if the pawn is being blocked, breaks the loop
                         break
             else:
-                if board[pos[0] - 1][pos[1]] == Board.EMPTY:
-                    move_list.append((pos[0] - 1, pos[1]))
+                if pos[0] > 0:
+                    if board[pos[0] - 1][pos[1]] == Board.EMPTY:
+                        move_list.append((pos[0] - 1, pos[1]))
             #adding moves for the pawn to capture other pieces
-            if board[pos[0] - 1][pos[1] - 1]:
-                if board[pos[0] - 1][pos[1] - 1].Color == self.black:
-                    move_list.append((pos[0] - 1, pos[1] - 1))
-            if board[pos[0] - 1][pos[1] + 1]:
-                if board[pos[0] - 1][pos[1] + 1].Color == self.black:
-                    move_list.append((pos[0] - 1, pos[1] + 1))
+            #if the index of the row is 0, shouldn't go out of bounds
+            if pos[0] > 0:
+                #if the index of the column is 0, shouldn't go out of bounds
+                if pos[1] > 0: 
+                    if board[pos[0] - 1][pos[1] - 1]:
+                        if board[pos[0] - 1][pos[1] - 1].Color == self.black:
+                            move_list.append((pos[0] - 1, pos[1] - 1))
+                #if the index of the column is 7, shouldn't go out of bounds
+                if pos[1] < 7:
+                    if board[pos[0] - 1][pos[1] + 1]:
+                        if board[pos[0] - 1][pos[1] + 1].Color == self.black:
+                            move_list.append((pos[0] - 1, pos[1] + 1))
 
         if self.Color == self.black:
             if self.is_first_move():
@@ -268,13 +275,17 @@ class Pawn(Piece):
                     else:
                         break
             else: #if it isn't first move, will only move one square
-                if board[pos[0] + 1][pos[1]] == Board.EMPTY:
-                    move_list.append((pos[0] + 1, pos[1]))
+                if pos[0] < 7:
+                    if board[pos[0] + 1][pos[1]] == Board.EMPTY:
+                        move_list.append((pos[0] + 1, pos[1]))
             #adding moves for the pawn to capture other pieces
-            if board[pos[0] + 1][pos[1] + 1].Color == self.white:
-                move_list.append((pos[0] + 1, pos[1] + 1))
-            if board[pos[0] + 1][pos[1] - 1].Color == self.white:
-                move_list.append((pos[0] + 1, pos[1] - 1))
+            if pos[0] < 7:
+                if pos[1] < 7:
+                    if board[pos[0] + 1][pos[1] + 1].Color == self.white:
+                        move_list.append((pos[0] + 1, pos[1] + 1))
+                if pos[1] > 0:
+                    if board[pos[0] + 1][pos[1] - 1].Color == self.white:
+                        move_list.append((pos[0] + 1, pos[1] - 1))
         return move_list
 
 class Knight(Piece):
@@ -343,8 +354,22 @@ class King(Piece):
         """
         returns a list containing tuples of available moves for a king.
         takes in parameters for the position and the baod
+        TODO: check for check, and if a move would put the king in line 
+        of sight of a piece of the opposite color
         """
+        move_list = []
         pos = self.position
+        for x, y in self.king_disp:
+            #keeping the moves in bounds
+            if pos[0] + x > 7 or pos[1] + y > 7 or pos[0] + x < 0 or pos[1] + y < 0:
+                continue
+            if board[pos[0] + x][pos[1] + y] == Board.EMPTY: #and the method for line of sight
+                move_list.append((pos[0] + x, pos[1] + y))
+            elif board[pos[0] + x][pos[1] + y].Color == self.Color:
+                continue
+            elif board[pos[0] + x][pos[1] + y].Color != self.Color:
+                move_list.append((pos[0] + x, pos[1] + y))
+        return move_list
 
 class Queen(Piece):
     #can move either horizontally/vertically or diagonally
@@ -498,10 +523,11 @@ class Game():
 
 a = Board()
 a.print_board()
-print(a.board[4][1].position)
-print(a.board[4][1].Color)
-print(type(a.board[4][1]))
 
-print(a.board[4][1].available_moves(a.board))
+print(a.board[4][0].position)
+print(a.board[4][0].Color)
+print(type(a.board[4][0]))
+
+print(a.board[4][0].available_moves(a.board))
 #print(a.board)
 #print(a.board[0][0].Color)
