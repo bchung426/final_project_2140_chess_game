@@ -371,6 +371,7 @@ class King(Piece):
                 continue
             elif board[pos[0] + x][pos[1] + y].Color != self.Color:
                 move_list.append((pos[0] + x, pos[1] + y))
+        move_list = Game.line_of_sight(move_list, self.Color)
         return move_list
 
 class Queen(Piece):
@@ -513,7 +514,7 @@ class Game():
         """
         for p in self.board:
             if p == self.board.EMPTY:
-                continue
+                pass
             else:
                 for i in p.available_moves(self.board):
                     if self.board[i[0]][i[1]] == self.board.EMPTY:
@@ -522,6 +523,36 @@ class Game():
                         print("The {} king is in check".format(self.board[i[0]][i[1]].Color))
                         return True
         return False
+    def line_of_sight(self, moves, color):
+        """
+        takes in a list of moves as a parameter (a list of tuples)
+        and checks all the pieces on the board to see if any pieces of
+        the opposite color would have line of sight of any of the squares
+
+        also takes in the color as a parameter so it can check
+        for the opposite color
+
+        the method is for the king, and is meant to return a new list of moves
+        with these squares that would be in line of sight removed.
+        """
+        bad_moves = []
+        for m in moves:
+            for p in self.board:
+                if p == self.board.EMPTY:
+                    pass
+                else:
+                    if p.Color == color:
+                        pass
+                    else:
+                        if m in p.available_moves(self.board):
+                            bad_moves.append(m)
+        if len(bad_moves) == 0:
+            return moves
+        else:
+            for i in bad_moves:
+                moves.remove(i)
+        return moves
+                      
 
 a = Board()
 a.print_board()
