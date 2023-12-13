@@ -74,12 +74,17 @@ class Board():
         move - a tuple representing the position the piece is moving to
         """
         #only plays the move if it is a legal move for that piece
+        if pos[0] > 7 or pos[1] > 7 or pos[0] < 0 or pos[1] < 0 or move[0] > 7 or move[1] > 7 or move[0] < 0 or move[1] < 0:
+            return False
         if self.in_check():
             #setting a variable to hold the color of the king thats in check
             a = self.board[self.in_check()[0]][self.in_check()[1]].Color
             #if a king is in check:
             if move in self.board[pos[0]][pos[1]].available_moves(self.board):
-                temp_hold = self.board[move[0]][move[1]]
+                if self.board[move[0]][move[1]] == self.EMPTY:
+                    temp_hold = self.EMPTY
+                else:
+                    temp_hold = type(self.board[move[0]][move[1]])(self.board[move[0]][move[1]].Color) #MEMORY PROBLEM
                 self.board[move[0]][move[1]] = self.board[pos[0]][pos[1]]
                 self.board[pos[0]][pos[1]] = self.EMPTY
                 self.update_pos()
@@ -90,16 +95,28 @@ class Board():
                         #reverts the move
                         self.board[pos[0]][pos[1]] = self.board[move[0]][move[1]]
                         self.board[move[0]][move[1]] = temp_hold
-                        self.update_pos
+                        self.update_pos()
                         return False
                     #if the king in check now isn't the same color king as it was originally:
                     else:
+                        if type(self.board[move[0]][move[1]]) == Pawn:
+                            self.board[move[0]][move[1]].moves += 1
                         return True
                 else:
+                    if type(self.board[move[0]][move[1]]) == Pawn:
+                        self.board[move[0]][move[1]].moves += 1
                     return True
+        #when moving from check to out of check, the indices of what pos was
+        #will become empty, making the elif after this cause error; this prevents this
+        elif self.board[pos[0]][pos[1]] == self.EMPTY:
+            return True
         elif move in self.board[pos[0]][pos[1]].available_moves(self.board):
             #holds the color of the piece being moved
             color_check = self.board[pos[0]][pos[1]].Color
+            if self.board[move[0]][move[1]] == self.EMPTY:
+                temp_hold = self.EMPTY
+            else:
+                temp_hold = type(self.board[move[0]][move[1]])(self.board[move[0]][move[1]].Color) #MEMORY PROBLEM
             self.board[move[0]][move[1]] = self.board[pos[0]][pos[1]]
             self.board[pos[0]][pos[1]] = self.EMPTY
             self.update_pos()
@@ -110,25 +127,27 @@ class Board():
                     #reverts the move
                     self.board[pos[0]][pos[1]] = self.board[move[0]][move[1]]
                     self.board[move[0]][move[1]] = temp_hold
-                    self.update_pos
+                    self.update_pos()
                     return False
                 else:
+                    if type(self.board[move[0]][move[1]]) == Pawn:
+                        self.board[move[0]][move[1]].moves += 1
                     return True
             else:
+                if type(self.board[move[0]][move[1]]) == Pawn:
+                    self.board[move[0]][move[1]].moves += 1
                 return True
         else:
             return False
+        if type(self.board[move[0]][move[1]]) == Pawn:
+            self.board[move[0]][move[1]].moves += 1
+        return True
     
     def in_check(self):
         """
+        Returns either the position of a king in check, or False
         checks if either king piece is in check. if it detects a 
-        king in check, it will then determine if there is checkmate,
-        
-        If a king is in check, prints which king is in check
-        and returns the position of the king in check as a tuple
-        otherwise, returns false
-
-        TODO: check if the king is in checkmate! maybe in a separate method!
+        king in check, returns the position of the king
         """
         for j in self.board:
             for p in j:
@@ -139,7 +158,6 @@ class Board():
                         if self.board[i[0]][i[1]] == self.EMPTY:
                             continue
                         if type(self.board[i[0]][i[1]]) == King:
-                            print("The {} king is in check".format(self.board[i[0]][i[1]].Color))
                             return (i[0], i[1])
                         """
                             if self.board[i[0]][i[1]].Color == King.white:
@@ -163,7 +181,10 @@ class Board():
         if self.in_check():
             king_pos = self.in_check()
             if not self.board[king_pos[0]][king_pos[1]].available_moves(self.board):
-                return self.board[king_pos[0]][king_pos[1]].Color
+                if self.board[king_pos[0]][king_pos[1]].Color == Piece.white:
+                    return Piece.black
+                else:
+                    return Piece.white
         else:
             return None
         
@@ -191,7 +212,7 @@ class Board():
             #other pieces
             self.board[0][i] = spec_pieces[i](Piece.black)
             self.board[7][i] = spec_pieces[i](Piece.white)
-        self.board[3][0] = King(King.white) #line i test methods for pieces with
+        #self.board[3][0] = King(King.white) #line i test methods for pieces with
         self.update_pos()
 
     def is_occupied(self, pos):
@@ -659,26 +680,47 @@ class Game():
         # cause the while loops to run
         move = (8, 8) 
         piece = (8, 8)
-        #MAKE USER GET OUT OF CHEKC IF THEY IN CHECK
+        
         self.Board.print_board()
-        """
-        while self.Board.in_check():
-            while not self.Board.is_occupied(piece) or self.Board.get_color(piece) != self.turn"""
-        while not self.Board.is_occupied(piece) or self.Board.get_color(piece) != self.turn:
-            print("It is {}'s turn to move".format(self.turn))
-            piece = self.get_piece()
-            if not self.Board.is_occupied(piece) or self.Board.get_color(piece) != self.turn:
-                self.Board.print_board()
-                print("The square you selected does not have a valid piece.")
-        
-        while move not in self.Board.board[piece[0]][piece[1]].available_moves(self.Board.board):
-            move = self.get_move()
-            if move not in self.Board.board[piece[0]][piece[1]].available_moves(self.Board.board):
-                self.Board.print_board()
-                print("The move you entered is not valid.")
-
-        
+        #MAKE USER GET OUT OF CHEKC IF THEY IN CHECK
+        if self.Board.in_check():
+            while not self.Board.place_move(piece, move):
+                print("The {} king is in check".format(self.Board.board[self.Board.in_check()[0]][self.Board.in_check()[1]].Color))
+            #making piece and move out of range again so it asks for both again
+                piece = (8, 8)
+                move = (8, 8)
+                while not self.Board.is_occupied(piece) or self.Board.get_color(piece) != self.turn:
+                    print("It is {}'s turn to move".format(self.turn))
+                    piece = self.get_piece()
+                    if not self.Board.is_occupied(piece) or self.Board.get_color(piece) != self.turn:
+                        self.Board.print_board()
+                        print("The square you selected does not have a valid piece.")
+                
+                while move not in self.Board.board[piece[0]][piece[1]].available_moves(self.Board.board):
+                    move = self.get_move()
+                    if move not in self.Board.board[piece[0]][piece[1]].available_moves(self.Board.board):
+                        self.Board.print_board()
+                        print("The move you entered is not valid.")
+                self.Board.place_move(piece, move)
+                if not self.Board.place_move(piece, move):
+                    self.Board.print_board()
+                    print("You are in Check!")
+        else:
+            while not self.Board.is_occupied(piece) or self.Board.get_color(piece) != self.turn:
+                print("It is {}'s turn to move".format(self.turn))
+                piece = self.get_piece()
+                if not self.Board.is_occupied(piece) or self.Board.get_color(piece) != self.turn:
+                    self.Board.print_board()
+                    print("The square you selected does not have a valid piece.")
+            
+            while move not in self.Board.board[piece[0]][piece[1]].available_moves(self.Board.board):
+                move = self.get_move()
+                if move not in self.Board.board[piece[0]][piece[1]].available_moves(self.Board.board):
+                    self.Board.print_board()
+                    print("The move you entered is not valid.")
+        #places move
         self.Board.place_move(piece, move)
+        #switches turns
         if self.turn == Game.white_pieces:
             self.turn = Game.black_pieces
         else:
@@ -699,7 +741,7 @@ class Game():
             #get the piece's position that the player wants to move
             while row_input not in Game.row_dict or file_input not in Game.file_dict:
                 file_input = str(input("Please enter the file of the piece: "))
-                row_input = str(input("Please enter the row the piece: "))
+                row_input = str(input("Please enter the row of the piece: "))
                 if row_input not in Game.row_dict or file_input not in Game.file_dict:
                     print("The position you entered is invalid. \n")
             row = Game.row_dict[row_input]
@@ -733,7 +775,7 @@ class Game():
         file_input = None
         #white pieces turn
         if self.turn == Game.white_pieces: 
-            print("Where do you want to move the piece to?")
+            print("Where do you want to move to?")
             #get the position the player wants to move to
             while row_input not in Game.row_dict or file_input not in Game.file_dict:
                 file_input = str(input("Please enter the file of the move: "))
@@ -747,24 +789,43 @@ class Game():
 
         #black pieces turn
         if self.turn == Game.black_pieces: 
-            print("Where do you want to move the piece to?") 
+            print("Where do you want to move to?") 
             while row_input not in Game.row_dict or file_input not in Game.file_dict:
-                file_input = str(input("Please enter the file of the piece: "))
-                row_input = str(input("Please enter the row the piece: "))
+                file_input = str(input("Please enter the file of the move: "))
+                row_input = str(input("Please enter the row the move: "))
                 if row_input not in Game.row_dict or file_input not in Game.file_dict:
-                    print("The position you entered is invalid. \n")
+                    print("The move you entered is invalid. \n")
             row = Game.row_dict[row_input]
             file = Game.file_dict[file_input]
             #putting the inputs into a tuple for the move
             move = (row, file)
         #returns the piece tuple
         return move
+    def announce_winner(self):
+        """
+        prints out a message for the winner
+        """
+        print("Congratulations {} has won the game!".format(self.Board.checkmate()))
+        return
+    def play(self):
+        """
+        This method starts the game.
+        """
+        while not self.Board.checkmate():
+            self.play_turn()
+        #show the board at the end of the game
+        self.Board.print_board()
+        self.announce_winner()
+
 """
 TODO:
-making the game play; making a winner (finding checkmate) should be easy with available_moves of the King with the protected method there now
+making the game play DONE; 
+making a winner (finding checkmate)  should be easy 
+with available_moves of the King with the protected method there nowDONE (sorta)
 adding the PGN as a subclass of Board which should just change the way the board is displayed (will use PGN notation instead)
+UPDATING PAWNS # OF MOVES - DONE
 """                   
-
+"""
 a = Game()
 a.Board.print_board()
 
@@ -773,7 +834,9 @@ print(a.Board.board[3][0].Color)
 print(type(a.Board.board[3][0]))
 
 print(a.Board.board[3][0].available_moves(a.Board.board))
-a.play_turn()
+a.play_turn() """
+
+Game().play()
 
 #print(a.board)
 #print(a.board[0][0].Color)
