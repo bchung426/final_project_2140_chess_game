@@ -67,14 +67,16 @@ class Board():
         and the move. Only places the move if the move is legal.
         Updates the previous spot on the board to become empty
 
-        Returns: A copy of the board state after executing
-        the move, or if the move is illegal, a copy of the current board state.
+        Returns: True if a move was succesfully made; False if a move
+        was invalid and/or reverted. 
 
         pos - a tuple representing the position of the piece being moved
         move - a tuple representing the position the piece is moving to
         """
         #only plays the move if it is a legal move for that piece
         if self.in_check():
+            #setting a variable to hold the color of the king thats in check
+            a = self.board[self.in_check()[0]][self.in_check()[1]].Color
             #if a king is in check:
             if move in self.board[pos[0]][pos[1]].available_moves(self.board):
                 temp_hold = self.board[move[0]][move[1]]
@@ -83,16 +85,37 @@ class Board():
                 self.update_pos()
                 #after updating the board with the move, if a king is still in check:
                 if self.in_check():
+                    #will check if the king in check is the same color as it was before
+                    if a == self.board[self.in_check()[0]][self.in_check()[1]].Color:
+                        #reverts the move
+                        self.board[pos[0]][pos[1]] = self.board[move[0]][move[1]]
+                        self.board[move[0]][move[1]] = temp_hold
+                        self.update_pos
+                        return False
+                    #if the king in check now isn't the same color king as it was originally:
+                    else:
+                        return True
+                else:
+                    return True
+        elif move in self.board[pos[0]][pos[1]].available_moves(self.board):
+            #holds the color of the piece being moved
+            color_check = self.board[pos[0]][pos[1]].Color
+            self.board[move[0]][move[1]] = self.board[pos[0]][pos[1]]
+            self.board[pos[0]][pos[1]] = self.EMPTY
+            self.update_pos()
+            if self.in_check():
+                #if the king in check after the move is the same color as the piece that was
+                #just moved, should revert the move
+                if self.board[self.in_check()[0]][self.in_check()[1]].Color == color_check:
                     #reverts the move
                     self.board[pos[0]][pos[1]] = self.board[move[0]][move[1]]
                     self.board[move[0]][move[1]] = temp_hold
                     self.update_pos
-                    
-        if move in self.board[pos[0]][pos[1]].available_moves(self.board):
-            self.board[move[0]][move[1]] = self.board[pos[0]][pos[1]]
-            self.board[pos[0]][pos[1]] = self.EMPTY
-            self.update_pos()
-
+                    return False
+                else:
+                    return True
+            else:
+                return True
         else:
             return False
     
@@ -102,7 +125,8 @@ class Board():
         king in check, it will then determine if there is checkmate,
         
         If a king is in check, prints which king is in check
-        and returns True
+        and returns the position of the king in check as a tuple
+        otherwise, returns false
 
         TODO: check if the king is in checkmate! maybe in a separate method!
         """
@@ -116,8 +140,32 @@ class Board():
                             continue
                         if type(self.board[i[0]][i[1]]) == King:
                             print("The {} king is in check".format(self.board[i[0]][i[1]].Color))
-                            return True
+                            return (i[0], i[1])
+                        """
+                            if self.board[i[0]][i[1]].Color == King.white:
+                                return King.white
+                            if self.board[i[0]][i[1]].Color == King.black:
+                                return King.black 
+                        """
         return False
+    
+    def checkmate(self):
+        """
+        Returns the winner of the game (either Piece.white or Piece.black) 
+        if there is checkmate. Otherwise returns None.
+
+        checks if a king is in check, and then checks if the king has any avai
+        TODO:
+        if a move would put the king out of 
+
+        Will check if the there is check first.
+        """
+        if self.in_check():
+            king_pos = self.in_check()
+            if not self.board[king_pos[0]][king_pos[1]].available_moves(self.board):
+                return self.board[king_pos[0]][king_pos[1]].Color
+        else:
+            return None
         
     def update_pos(self):
         """
