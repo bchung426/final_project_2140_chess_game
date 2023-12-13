@@ -711,9 +711,11 @@ class Game():
             move = (row, file)
         #returns the piece tuple
         return move
-
-
-                      
+"""
+TODO:
+making the game play; making a winner (finding checkmate) should be easy with available_moves of the King with the protected method there now
+adding the PGN as a subclass of Board which should just change the way the board is displayed (will use PGN notation instead)
+"""                   
 
 a = Game()
 a.Board.print_board()
