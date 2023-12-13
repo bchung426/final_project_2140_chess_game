@@ -126,6 +126,10 @@ class Board():
         """
         Returns the color of a piece at a certain position
         """
+        if pos[0] > 7 or pos[1] > 7 or pos[0] < 0 or pos[1] < 0:
+            return False
+        if self.board[pos[0]][pos[1]] == self.EMPTY:
+            return False
         return self.board[pos[0]][pos[1]].Color
 
 
@@ -483,10 +487,8 @@ class King(Piece):
         for the opposite color
 
         the method is for the king, and is meant to return a new list of moves
-        with these squares that would be in line of sight removed.
-        TODO: make a new method for the pawn that returns the 2 squares
-        for it to take diagonally, use this to check the pawns line of sight
-        on a king's moves. also doing this for the king
+        with these squares that would be in line of sight and squares that have pieces
+        that are protected to be removed.
         """
         bad_moves = []
         for m in moves:
@@ -498,13 +500,7 @@ class King(Piece):
                         if p.Color == color:
                             pass
                         else:
-                            if type(p) == Pawn:
-                                #pawn capturing moves
-                                return 0
-                            elif type(p) == King:
-                                if m in p.king_los:
-                                    bad_moves.append(m)
-                            elif m in p.available_moves(board):
+                            if m in p.protecting(board):
                                 bad_moves.append(m)
         if len(bad_moves) == 0:
             return moves
@@ -512,6 +508,7 @@ class King(Piece):
             for i in bad_moves:
                 moves.remove(i)
         return moves
+    
     def protecting(self, board):
         """
         the same exact function as the King.available_moves, except
@@ -573,11 +570,15 @@ class Game():
          - modifying the board
          - ending the current player's turn
         """
-        move = () 
-        piece = ()
+        #initializing these as values that are not valid and would 
+        # cause the while loops to run
+        move = (8, 8) 
+        piece = (8, 8)
         while not self.board.is_occupied(piece) or self.board.get_color(piece) != self.turn:
             self.board.print_board()
             piece = self.get_piece()
+            if not self.board.is_occupied(piece) or self.board.get_color(piece) != self.turn:
+                print("The square you selected does not have a valid piece.")
         
         while move not in self.board[piece[0]][piece[1]].available_moves(self.board):
             self.board.print_board()
@@ -627,6 +628,7 @@ class Game():
             piece = (row, file)
         #returns the piece tuple
         return piece
+    
     def get_move(self):
         """
         Gets the second part of the move from the player whose turn it 
@@ -676,16 +678,17 @@ class Game():
 
         TODO: check if the king is in checkmate! maybe in a separate method!
         """
-        for p in self.board:
-            if p == self.board.EMPTY:
-                pass
-            else:
-                for i in p.available_moves(self.board):
-                    if self.board[i[0]][i[1]] == self.board.EMPTY:
-                        continue
-                    if type(self.board[i[0]][i[1]]) == King:
-                        print("The {} king is in check".format(self.board[i[0]][i[1]].Color))
-                        return True
+        for j in self.board:
+            for p in j:
+                if p == self.board.EMPTY:
+                    pass
+                else:
+                    for i in p.available_moves(self.board):
+                        if self.board[i[0]][i[1]] == self.board.EMPTY:
+                            continue
+                        if type(self.board[i[0]][i[1]]) == King:
+                            print("The {} king is in check".format(self.board[i[0]][i[1]].Color))
+                            return True
         return False
                       
 
