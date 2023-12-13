@@ -201,7 +201,7 @@ class Piece():
 
         nearly identical to the find_moves method above, only difference is 
         it adds a move if the piece in the square is the same color before
-        going on to the next increment
+        going on to the next increment instead of just not adding the move
 
         this function is only for pieces that can move an infinite 
         number of spaces (rook, bishop, queen)
@@ -386,8 +386,19 @@ class Knight(Piece):
             elif board[pos[0] + x][pos[1] + y].Color != self.Color:
                 move_list.append((pos[0] + x, pos[1] + y))
         return move_list
-                
-
+    def protecting(self, board):
+        """
+        returns the list of tuples containing squares "protected" by the
+        knight
+        """
+        move_list = []
+        pos = self.position
+        for x, y in self.knight_disp:
+            if pos[0] + x > 7 or pos[1] + y > 7 or pos[0] + x < 0 or pos[1] + y < 0:
+                continue
+            else:
+                move_list.append((pos[0] + x, pos[1] + y))
+        return move_list
 
 class Rook(Piece):
     #can only move horizontally/vertically
@@ -402,12 +413,14 @@ class Rook(Piece):
         !! seems to work!
         """
         return self.find_moves(self.position, self.Color, self.r_increments, board)
+    
     def protecting(self, board):
         """
         returns the list of tuples containing squares "protected" by the
         rook
         """
         return self.protected(self.Color, self.r_increments, board)
+    
 class Bishop(Piece):
     #can only move diagonally
     b_increments = [(1,1), (1,-1), (-1,1), (-1,-1)]
@@ -421,6 +434,14 @@ class Bishop(Piece):
         !! seems to work!
         """
         return self.find_moves(self.position, self.Color, self.b_increments, board)
+    
+    def protecting(self, board):
+        """
+        returns the list of tuples containing squares "protected" by the
+        bishop
+        """
+        return self.protected(self.Color, self.b_increments, board)
+    
 class King(Piece):
     """
     need to add methods for check, as well as methods for if other color pieces
@@ -451,6 +472,7 @@ class King(Piece):
                 move_list.append((pos[0] + x, pos[1] + y))
         move_list = self.line_of_sight(move_list, self.Color, board)
         return move_list
+    
     def line_of_sight(self, moves, color, board):
         """
         takes in a list of moves as a parameter (a list of tuples)
@@ -490,7 +512,7 @@ class King(Piece):
             for i in bad_moves:
                 moves.remove(i)
         return moves
-    def king_los(self, board):
+    def protecting(self, board):
         """
         the same exact function as the King.available_moves, except
         it will not remove moves from the list of moves given line
@@ -506,12 +528,7 @@ class King(Piece):
             #keeping the moves in bounds
             if pos[0] + x > 7 or pos[1] + y > 7 or pos[0] + x < 0 or pos[1] + y < 0:
                 continue
-            if board[pos[0] + x][pos[1] + y] == Board.EMPTY: #and the method for line of sight
-                move_list.append((pos[0] + x, pos[1] + y))
-            elif board[pos[0] + x][pos[1] + y].Color == self.Color:
-                continue
-            elif board[pos[0] + x][pos[1] + y].Color != self.Color:
-                move_list.append((pos[0] + x, pos[1] + y))
+            move_list.append((pos[0] + x, pos[1] + y))
         return move_list
 
 class Queen(Piece):
@@ -527,6 +544,13 @@ class Queen(Piece):
         !! seems to work!
         """
         return self.find_moves(self.position, self.Color, self.q_increments, board)
+    
+    def protecting(self, board):
+        """
+        returns the list of tuples containing squares "protected" by the
+        queen
+        """
+        return self.protected(self.Color, self.q_increments, board)
 
 class Game():
     """
