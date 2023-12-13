@@ -194,6 +194,51 @@ class Piece():
                 curr_row += x 
                 curr_file += y
         return move_list
+    def protected(self, color, increments, board):
+        """
+        returns a list of moves that the piece would be "protecting"
+        given the color, the increment, and the board
+
+        nearly identical to the find_moves method above, only difference is 
+        it adds a move if the piece in the square is the same color before
+        going on to the next increment
+
+        this function is only for pieces that can move an infinite 
+        number of spaces (rook, bishop, queen)
+        """
+        pos = self.position
+        row = pos[0]
+        file = pos[1]
+        move_list = []
+        for x, y in increments:
+            curr_row = row + x
+            curr_file = file + y
+            for i in range(7):
+                if curr_row > 7 or curr_file > 7 or curr_row < 0 or curr_file < 0:
+                    #any of these values would result in  an illegal move since the 
+                    # piece would no longer be on the board, so shouldn't add it to 
+                    # the list of moves; also the increments would continue moving in
+                    # the direction to be off the board, so should also stop 
+                    # the current increment values
+                    break
+                if board[curr_row][curr_file] == Board.EMPTY:
+                    #if there is no piece in the location, should add
+                    # the location to the move list
+                    move_list.append((curr_row,curr_file))
+                #if it runs into a piece of the opposite color, adds the 
+                #square to the move list and goes to the next increment
+                elif board[curr_row][curr_file].Color != color:
+                    move_list.append((curr_row,curr_file))
+                    break
+                #if it runs into a piece of the same color, 
+                #adds the move and then goes to the next increment "protected"
+                elif board[curr_row][curr_file].Color == color:
+                    move_list.append((curr_row, curr_file))
+                    break
+                #increments
+                curr_row += x 
+                curr_file += y
+        return move_list
     
 class Pawn(Piece):
     """
@@ -289,6 +334,34 @@ class Pawn(Piece):
                         if board[pos[0] + 1][pos[1] - 1].Color == self.white:
                             move_list.append((pos[0] + 1, pos[1] - 1))
         return move_list
+    
+    def protecting(self, board):
+        """
+        returns the legal squares where a pawn would be able to take
+        a piece if a piece were in the squares
+        to be used for the line_of_sight method in the King class
+        adds the move even if a piece of the same color is in it "protecting"
+          like a knight outpost
+        """
+        move_list = []
+        pos = self.position
+        if self.Color == self.white:
+            if pos[0] > 0:
+                #if the index of the column is 0, shouldn't go out of bounds
+                if pos[1] > 0:
+                    move_list.append((pos[0] - 1, pos[1] - 1))
+                #if the index of the column is 7, shouldn't go out of bounds
+                if pos[1] < 7:
+                    move_list.append((pos[0] - 1, pos[1] + 1))
+        if self.Color == self.black:
+            if pos[0] < 7:
+                #if the index of the column is 0, shouldn't go out of bounds
+                if pos[1] > 0:
+                    move_list.append((pos[0] + 1, pos[1] - 1))
+                #if the index of the column is 7, shouldn't go out of bounds
+                if pos[1] < 7:
+                    move_list.append((pos[0] + 1, pos[1] + 1))
+        return move_list
 
 class Knight(Piece):
     #a list for the tuples for the knight moves (knight displacement)
@@ -329,7 +402,12 @@ class Rook(Piece):
         !! seems to work!
         """
         return self.find_moves(self.position, self.Color, self.r_increments, board)
-
+    def protecting(self, board):
+        """
+        returns the list of tuples containing squares "protected" by the
+        rook
+        """
+        return self.protected(self.Color, self.r_increments, board)
 class Bishop(Piece):
     #can only move diagonally
     b_increments = [(1,1), (1,-1), (-1,1), (-1,-1)]
@@ -419,6 +497,8 @@ class King(Piece):
         of sight. 
         Used in the line_of_sight method to potentially remove moves
         due to the other king
+        will also have the moves even if a piece of the same color is in
+        that square, since the king would protect it from the other king
         """
         move_list = []
         pos = self.position
