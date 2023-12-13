@@ -17,6 +17,9 @@ class Board():
         """
         self.board = [['' for i in range(self.SIZE)] for j in range(self.SIZE)]
         self.start_pos()
+        #total moves to be used for the pgn; defined here so i don't have to rewrite/redefine the functions
+        # to add to the total moves 
+        self.total_moves = 2
     
     def print_board(self):
         """
@@ -101,10 +104,12 @@ class Board():
                     else:
                         if type(self.board[move[0]][move[1]]) == Pawn:
                             self.board[move[0]][move[1]].moves += 1
+                        self.total_moves += 1
                         return True
                 else:
                     if type(self.board[move[0]][move[1]]) == Pawn:
                         self.board[move[0]][move[1]].moves += 1
+                    self.total_moves += 1
                     return True
         #when moving from check to out of check, the indices of what pos was
         #will become empty, making the elif after this cause error; this prevents this
@@ -132,10 +137,12 @@ class Board():
                 else:
                     if type(self.board[move[0]][move[1]]) == Pawn:
                         self.board[move[0]][move[1]].moves += 1
+                    self.total_moves += 1
                     return True
             else:
                 if type(self.board[move[0]][move[1]]) == Pawn:
                     self.board[move[0]][move[1]].moves += 1
+                self.total_moves += 1
                 return True
         else:
             return False
@@ -152,6 +159,9 @@ class Board():
         for j in self.board:
             for p in j:
                 if p == self.EMPTY:
+                    pass
+                #a king can't check another king; 
+                elif type(p) == King:
                     pass
                 else:
                     for i in p.available_moves(self.board):
@@ -655,6 +665,176 @@ class Queen(Piece):
         """
         return self.protected(self.Color, self.q_increments, board)
 
+class PGN(Board):
+    def __init__(self):
+        super().__init__()
+        self.string = '\n'
+        #starting the total_moves at 2 so that 2//2 is 1, 3//2 is 1. etc 
+        self.total_moves = 2
+    def print_board(self):
+        """
+        prints the history of moves like a PGN
+
+        the board is printed from a point of view of the player using
+        the white pieces (white starting position will always appear at the bottom)
+
+        used basically the same stuff from the tictactoe; added stuff in to get 
+        the row/file labels as well as increased the spacing between rows b/c the spacing with
+        the chess piece characters are muy interesante 
+        """
+        if self.total_moves % 2 == 0:
+            self.string += str(self.total_moves // 2)
+            self.string += ". "
+        print(self.string + "\n")
+
+    def place_move(self, pos, move):
+        """
+        same exact code as the method from Board, just added in the 
+        parts to add to self.string before it would return true to add
+        the history of the move
+        """
+        if pos[0] > 7 or pos[1] > 7 or pos[0] < 0 or pos[1] < 0 or move[0] > 7 or move[1] > 7 or move[0] < 0 or move[1] < 0:
+            return False
+        if self.in_check():
+            #setting a variable to hold the color of the king thats in check
+            a = self.board[self.in_check()[0]][self.in_check()[1]].Color
+            #if a king is in check:
+            if move in self.board[pos[0]][pos[1]].available_moves(self.board):
+                if self.board[move[0]][move[1]] == self.EMPTY:
+                    temp_hold = self.EMPTY
+                else:
+                    if type(self.board[move[0]][move[1]]) == Pawn:
+                        #making sure the pawns will still have the same # of moves counted if it gets reverted
+                        temp_hold = type(self.board[move[0]][move[1]])(self.board[move[0]][move[1]].Color, self.board[move[0]][move[1]].moves)
+                    else:
+                        temp_hold = type(self.board[move[0]][move[1]])(self.board[move[0]][move[1]].Color)
+                self.board[move[0]][move[1]] = self.board[pos[0]][pos[1]]
+                self.board[pos[0]][pos[1]] = self.EMPTY
+                self.update_pos()
+                #after updating the board with the move, if a king is still in check:
+                if self.in_check():
+                    #will check if the king in check is the same color as it was before
+                    if a == self.board[self.in_check()[0]][self.in_check()[1]].Color:
+                        #reverts the move
+                        self.board[pos[0]][pos[1]] = self.board[move[0]][move[1]]
+                        self.board[move[0]][move[1]] = temp_hold
+                        self.update_pos()
+                        return False
+                    #if the king in check now isn't the same color king as it was originally:
+                    else:
+                        if type(self.board[move[0]][move[1]]) == Pawn:
+                            self.board[move[0]][move[1]].moves += 1
+                        self.total_moves += 1
+                        self.string += self.notation_type(self.board[move[0]][move[1]])
+                        self.string += self.notation_move(self.board[move[0]][move[1]], temp_hold, pos)
+                        if self.in_check():
+                            self.string += "+"
+                        return True
+                else:
+                    if type(self.board[move[0]][move[1]]) == Pawn:
+                        self.board[move[0]][move[1]].moves += 1
+                    self.total_moves += 1
+                    self.string += self.notation_type(self.board[move[0]][move[1]])
+                    self.string += self.notation_move(self.board[move[0]][move[1]], temp_hold, pos)
+                    if self.in_check():
+                        self.string += "+"
+                    return True
+        #when moving from check to out of check, the indices of what pos was
+        #will become empty, making the elif after this cause error; this prevents this
+        elif self.board[pos[0]][pos[1]] == self.EMPTY:
+            return True
+        elif move in self.board[pos[0]][pos[1]].available_moves(self.board):
+            #holds the color of the piece being moved
+            color_check = self.board[pos[0]][pos[1]].Color
+            if self.board[move[0]][move[1]] == self.EMPTY:
+                temp_hold = self.EMPTY
+            else:
+                if type(self.board[move[0]][move[1]]) == Pawn:
+                        #making sure the pawns will still have the same # of moves counted if it gets reverted
+                        temp_hold = type(self.board[move[0]][move[1]])(self.board[move[0]][move[1]].Color, self.board[move[0]][move[1]].moves)
+                else:
+                    temp_hold = type(self.board[move[0]][move[1]])(self.board[move[0]][move[1]].Color)
+            self.board[move[0]][move[1]] = self.board[pos[0]][pos[1]]
+            self.board[pos[0]][pos[1]] = self.EMPTY
+            self.update_pos()
+            if self.in_check():
+                #if the king in check after the move is the same color as the piece that was
+                #just moved, should revert the move
+                if self.board[self.in_check()[0]][self.in_check()[1]].Color == color_check:
+                    #reverts the move
+                    self.board[pos[0]][pos[1]] = self.board[move[0]][move[1]]
+                    self.board[move[0]][move[1]] = temp_hold
+                    self.update_pos()
+                    return False
+                else:
+                    if type(self.board[move[0]][move[1]]) == Pawn:
+                        self.board[move[0]][move[1]].moves += 1
+                    self.total_moves += 1
+                    self.string += self.notation_type(self.board[move[0]][move[1]])
+                    self.string += self.notation_move(self.board[move[0]][move[1]], temp_hold, pos)
+                    if self.in_check():
+                        self.string += "+"
+                    return True
+            else:
+                if type(self.board[move[0]][move[1]]) == Pawn:
+                    self.board[move[0]][move[1]].moves += 1
+                self.total_moves += 1
+                self.string += self.notation_type(self.board[move[0]][move[1]])
+                self.string += self.notation_move(self.board[move[0]][move[1]], temp_hold, pos)
+                if self.in_check():
+                    self.string += "+"
+                return True
+        else:
+            return False
+        if type(self.board[move[0]][move[1]]) == Pawn:
+            self.board[move[0]][move[1]].moves += 1
+        print("\n\n if you see this its bad! \n\n")
+        return True
+    
+    def notation_type(self, piece):
+        """
+        Takes in a piece that just moved as a parameter
+        Depending on the piece type that is put in as a parameter,
+        will return a character that would represent the first part on the PGN
+        """
+        t = type(piece)
+        if t == Pawn:
+            return ''
+        if t == Rook:
+            return "R"
+        if t == Knight:
+            return "N"
+        if t == Bishop:
+            return "B"
+        if t == Queen:
+            return "Q"
+        if t == King:
+            return "K"
+    def notation_move(self, piece, piece2, prev_pos):
+        """
+        Takes in 2 pieces and a position as parameters; the first piece is the piece that just moved; the second piece
+        will be the temp_hold (either a piece or Board.EMPTY)
+        The position prev_pos will be a tuple of the position that the temp_hold was
+        Depending on if a piece was taken as a result of moving (if the temp_hold has a piece or not)
+        will return the latter part of the PGN notation
+        """
+        s = ''
+        file_d = {0:'a', 1:'b', 2:'c', 3:'d', 4:'e', 5:'f', 6:'g', 7:'h'}
+        row_d = {0:'8', 1:'7', 2:'6', 3:'5', 4:'4', 5:'3', 6:'2', 7:'1'}
+        #if a piece was taken
+        if piece2:
+            #if a pawn took a piece, add the file the pawn was in before taking
+            if type(piece) == Pawn:
+                s += file_d[prev_pos[1]]
+            s += 'x'
+            #add the square it just moved to 
+        #adding the file
+        s += file_d[piece.position[1]]
+        #adding the row
+        s += row_d[piece.position[0]]
+        s += ' '
+        return s            
+
 class Game():
     """
     Class to control the state of the Chess game. 
@@ -705,6 +885,7 @@ class Game():
                 if not self.Board.place_move(piece, move):
                     self.Board.print_board()
                     print("You are in Check!")
+
         else:
             while not self.Board.is_occupied(piece) or self.Board.get_color(piece) != self.turn:
                 print("It is {}'s turn to move".format(self.turn))
@@ -811,6 +992,14 @@ class Game():
         """
         This method starts the game.
         """
+        disp = -1
+        while int(disp) != 0 and int(disp) != 1:
+            disp = input("Would you like to have a board (0) or a PGN (1) to display the game? ")
+            if int(disp) == 0:
+                continue
+            if int(disp) == 1:
+                self.Board = PGN()
+                continue
         while not self.Board.checkmate():
             self.play_turn()
         #show the board at the end of the game
@@ -819,9 +1008,9 @@ class Game():
 
 """
 TODO:
-making the game play DONE; 
-making a winner (finding checkmate)  should be easy 
-with available_moves of the King with the protected method there nowDONE (sorta)
+making the game play  - Done; 
+making a winner (finding checkmate)  should be easy - DONE
+
 adding the PGN as a subclass of Board which should just change the way the board is displayed (will use PGN notation instead)
 UPDATING PAWNS # OF MOVES - DONE
 """                   
