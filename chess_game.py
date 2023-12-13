@@ -74,6 +74,20 @@ class Board():
         move - a tuple representing the position the piece is moving to
         """
         #only plays the move if it is a legal move for that piece
+        if self.in_check():
+            #if a king is in check:
+            if move in self.board[pos[0]][pos[1]].available_moves(self.board):
+                temp_hold = self.board[move[0]][move[1]]
+                self.board[move[0]][move[1]] = self.board[pos[0]][pos[1]]
+                self.board[pos[0]][pos[1]] = self.EMPTY
+                self.update_pos()
+                #after updating the board with the move, if a king is still in check:
+                if self.in_check():
+                    #reverts the move
+                    self.board[pos[0]][pos[1]] = self.board[move[0]][move[1]]
+                    self.board[move[0]][move[1]] = temp_hold
+                    self.update_pos
+                    
         if move in self.board[pos[0]][pos[1]].available_moves(self.board):
             self.board[move[0]][move[1]] = self.board[pos[0]][pos[1]]
             self.board[pos[0]][pos[1]] = self.EMPTY
@@ -81,6 +95,29 @@ class Board():
 
         else:
             return False
+    
+    def in_check(self):
+        """
+        checks if either king piece is in check. if it detects a 
+        king in check, it will then determine if there is checkmate,
+        
+        If a king is in check, prints which king is in check
+        and returns True
+
+        TODO: check if the king is in checkmate! maybe in a separate method!
+        """
+        for j in self.board:
+            for p in j:
+                if p == self.EMPTY:
+                    pass
+                else:
+                    for i in p.available_moves(self.board):
+                        if self.board[i[0]][i[1]] == self.EMPTY:
+                            continue
+                        if type(self.board[i[0]][i[1]]) == King:
+                            print("The {} king is in check".format(self.board[i[0]][i[1]].Color))
+                            return True
+        return False
         
     def update_pos(self):
         """
@@ -118,7 +155,7 @@ class Board():
         file = pos[1]
         if row > 7 or file > 7 or row < 0 or file < 0:
             return False
-        if self.board[row][pos] == self.EMPTY:
+        if self.board[row][file] == self.EMPTY:
             return False
         else:
             return True
@@ -490,7 +527,7 @@ class King(Piece):
         with these squares that would be in line of sight and squares that have pieces
         that are protected to be removed.
         """
-        bad_moves = []
+        bad_moves = set()
         for m in moves:
             for l in board:
                 for p in l:
@@ -501,7 +538,7 @@ class King(Piece):
                             pass
                         else:
                             if m in p.protecting(board):
-                                bad_moves.append(m)
+                                bad_moves.add(m)
         if len(bad_moves) == 0:
             return moves
         else:
@@ -560,7 +597,7 @@ class Game():
     file_dict = {'a':0, 'b':1, 'c':2, 'd':3, 'e':4, 'f':5, 'g':6, 'h':7}
     row_dict = {'1':7, '2':6, '3':5, '4':4, '5':3, '6':2, '7':1, '8':0}
     def __init__(self):
-        self.board = Board()
+        self.Board = Board()
         self.turn = Game.white_pieces
     def play_turn(self):
         """
@@ -574,17 +611,26 @@ class Game():
         # cause the while loops to run
         move = (8, 8) 
         piece = (8, 8)
-        while not self.board.is_occupied(piece) or self.board.get_color(piece) != self.turn:
-            self.board.print_board()
+        #MAKE USER GET OUT OF CHEKC IF THEY IN CHECK
+        self.Board.print_board()
+        """
+        while self.Board.in_check():
+            while not self.Board.is_occupied(piece) or self.Board.get_color(piece) != self.turn"""
+        while not self.Board.is_occupied(piece) or self.Board.get_color(piece) != self.turn:
+            print("It is {}'s turn to move".format(self.turn))
             piece = self.get_piece()
-            if not self.board.is_occupied(piece) or self.board.get_color(piece) != self.turn:
+            if not self.Board.is_occupied(piece) or self.Board.get_color(piece) != self.turn:
+                self.Board.print_board()
                 print("The square you selected does not have a valid piece.")
         
-        while move not in self.board[piece[0]][piece[1]].available_moves(self.board):
-            self.board.print_board()
+        while move not in self.Board.board[piece[0]][piece[1]].available_moves(self.Board.board):
             move = self.get_move()
+            if move not in self.Board.board[piece[0]][piece[1]].available_moves(self.Board.board):
+                self.Board.print_board()
+                print("The move you entered is not valid.")
+
         
-        self.board.place_move(piece, move)
+        self.Board.place_move(piece, move)
         if self.turn == Game.white_pieces:
             self.turn = Game.black_pieces
         else:
@@ -602,7 +648,6 @@ class Game():
         file_input = None
         #white pieces turn
         if self.turn == Game.white_pieces: 
-            print("It is white's turn to move.")
             #get the piece's position that the player wants to move
             while row_input not in Game.row_dict or file_input not in Game.file_dict:
                 file_input = str(input("Please enter the file of the piece: "))
@@ -615,8 +660,7 @@ class Game():
             piece = (row, file)
 
         #black pieces turn
-        if self.turn == Game.black_pieces: 
-            print("It is black's turn to move.")   
+        if self.turn == Game.black_pieces:   
             while row_input not in Game.row_dict or file_input not in Game.file_dict:
                 file_input = str(input("Please enter the file of the piece: "))
                 row_input = str(input("Please enter the row the piece: "))
@@ -644,10 +688,10 @@ class Game():
             print("Where do you want to move the piece to?")
             #get the position the player wants to move to
             while row_input not in Game.row_dict or file_input not in Game.file_dict:
-                file_input = str(input("Please enter the file of the piece: "))
-                row_input = str(input("Please enter the row the piece: "))
+                file_input = str(input("Please enter the file of the move: "))
+                row_input = str(input("Please enter the row the move: "))
                 if row_input not in Game.row_dict or file_input not in Game.file_dict:
-                    print("The position you entered is invalid. \n")
+                    print("The move you entered is invalid. \n")
             row = Game.row_dict[row_input]
             file = Game.file_dict[file_input]
             #putting the inputs into a tuple for the move
@@ -668,37 +712,18 @@ class Game():
         #returns the piece tuple
         return move
 
-    def in_check(self):
-        """
-        checks if either king piece is in check. if it detects a 
-        king in check, it will then determine if there is checkmate,
-        
-        If a king is in check, prints which king is in check
-        and returns True
 
-        TODO: check if the king is in checkmate! maybe in a separate method!
-        """
-        for j in self.board:
-            for p in j:
-                if p == self.board.EMPTY:
-                    pass
-                else:
-                    for i in p.available_moves(self.board):
-                        if self.board[i[0]][i[1]] == self.board.EMPTY:
-                            continue
-                        if type(self.board[i[0]][i[1]]) == King:
-                            print("The {} king is in check".format(self.board[i[0]][i[1]].Color))
-                            return True
-        return False
                       
 
-a = Board()
-a.print_board()
+a = Game()
+a.Board.print_board()
 
-print(a.board[3][0].position)
-print(a.board[3][0].Color)
-print(type(a.board[3][0]))
+print(a.Board.board[3][0].position)
+print(a.Board.board[3][0].Color)
+print(type(a.Board.board[3][0]))
 
-print(a.board[3][0].available_moves(a.board))
+print(a.Board.board[3][0].available_moves(a.Board.board))
+a.play_turn()
+
 #print(a.board)
 #print(a.board[0][0].Color)
