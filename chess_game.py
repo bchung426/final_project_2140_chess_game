@@ -349,6 +349,12 @@ class Piece():
                 #square to the move list and goes to the next increment
                 elif board[curr_row][curr_file].Color != color:
                     move_list.append((curr_row,curr_file))
+                    #check the commit about 'specific checkmate' for explanation
+                    if type(board[curr_row][curr_file]) == King:
+                        if curr_row + x > 7 or curr_file + y > 7 or curr_row + x < 0 or curr_file + y< 0:
+                            pass
+                        else:
+                            move_list.append((curr_row + x, curr_file + y))
                     break
                 #if it runs into a piece of the same color, 
                 #adds the move and then goes to the next increment "protected"
@@ -682,9 +688,13 @@ class PGN(Board):
         the row/file labels as well as increased the spacing between rows b/c the spacing with
         the chess piece characters are muy interesante 
         """
+        if self.total_moves % 16 == 0:
+            self.string += "\n"
         if self.total_moves % 2 == 0:
+            self.string += " "
             self.string += str(self.total_moves // 2)
             self.string += ". "
+        
         print(self.string + "\n")
 
     def place_move(self, pos, move):
@@ -727,7 +737,9 @@ class PGN(Board):
                         self.total_moves += 1
                         self.string += self.notation_type(self.board[move[0]][move[1]])
                         self.string += self.notation_move(self.board[move[0]][move[1]], temp_hold, pos)
-                        if self.in_check():
+                        if self.checkmate():
+                            self.string += "#"
+                        elif self.in_check():
                             self.string += "+"
                         return True
                 else:
@@ -736,7 +748,9 @@ class PGN(Board):
                     self.total_moves += 1
                     self.string += self.notation_type(self.board[move[0]][move[1]])
                     self.string += self.notation_move(self.board[move[0]][move[1]], temp_hold, pos)
-                    if self.in_check():
+                    if self.checkmate():
+                        self.string += "#"
+                    elif self.in_check():
                         self.string += "+"
                     return True
         #when moving from check to out of check, the indices of what pos was
@@ -772,7 +786,9 @@ class PGN(Board):
                     self.total_moves += 1
                     self.string += self.notation_type(self.board[move[0]][move[1]])
                     self.string += self.notation_move(self.board[move[0]][move[1]], temp_hold, pos)
-                    if self.in_check():
+                    if self.checkmate():
+                        self.string += "#"
+                    elif self.in_check():
                         self.string += "+"
                     return True
             else:
@@ -781,14 +797,15 @@ class PGN(Board):
                 self.total_moves += 1
                 self.string += self.notation_type(self.board[move[0]][move[1]])
                 self.string += self.notation_move(self.board[move[0]][move[1]], temp_hold, pos)
-                if self.in_check():
+                if self.checkmate():
+                    self.string += "#"
+                elif self.in_check():
                     self.string += "+"
                 return True
         else:
             return False
         if type(self.board[move[0]][move[1]]) == Pawn:
             self.board[move[0]][move[1]].moves += 1
-        print("\n\n if you see this its bad! \n\n")
         return True
     
     def notation_type(self, piece):
@@ -1009,9 +1026,11 @@ class Game():
 """
 TODO:
 making the game play  - Done; 
-making a winner (finding checkmate)  should be easy - DONE
+making a winner (finding checkmate)  should be easy - DONE 
+-- one specific case it doesn't do it correctly with the incremental pieces; the
 
 adding the PGN as a subclass of Board which should just change the way the board is displayed (will use PGN notation instead)
+- DONE
 UPDATING PAWNS # OF MOVES - DONE
 """                   
 """
