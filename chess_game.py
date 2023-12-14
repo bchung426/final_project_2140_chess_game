@@ -1030,4 +1030,4 @@ print(type(a.Board.board[3][0]))
 print(a.Board.board[3][0].available_moves(a.Board.board))
 a.play_turn() """
 
-#Game().play()
+Game().play()
