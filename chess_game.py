@@ -4,8 +4,6 @@ class Board():
     A representation of a Chess board
     which can be updated with legal moves
     and detect if there is currently a winner.
-
-
     """
     SIZE = 8
     EMPTY = ''
@@ -104,11 +102,15 @@ class Board():
                     else:
                         if type(self.board[move[0]][move[1]]) == Pawn:
                             self.board[move[0]][move[1]].moves += 1
+                            self.board[move[0]][move[1]].promotion(self.board)
+                        self.update_pos()
                         self.total_moves += 1
                         return True
                 else:
                     if type(self.board[move[0]][move[1]]) == Pawn:
                         self.board[move[0]][move[1]].moves += 1
+                        self.board[move[0]][move[1]].promotion(self.board)
+                    self.update_pos()
                     self.total_moves += 1
                     return True
         #when moving from check to out of check, the indices of what pos was
@@ -137,11 +139,15 @@ class Board():
                 else:
                     if type(self.board[move[0]][move[1]]) == Pawn:
                         self.board[move[0]][move[1]].moves += 1
+                        self.board[move[0]][move[1]].promotion(self.board)
+                    self.update_pos()
                     self.total_moves += 1
                     return True
             else:
                 if type(self.board[move[0]][move[1]]) == Pawn:
                     self.board[move[0]][move[1]].moves += 1
+                    self.board[move[0]][move[1]].promotion(self.board)
+                self.update_pos()
                 self.total_moves += 1
                 return True
         else:
@@ -488,6 +494,15 @@ class Pawn(Piece):
                 if pos[1] < 7:
                     move_list.append((pos[0] + 1, pos[1] + 1))
         return move_list
+    
+    def promotion(self, board):
+        pos = self.position
+        if self.Color == self.white:
+            if pos[0] == 0:
+                board[pos[0]][pos[1]] = Queen(self.Color)
+        if self.Color == self.black:
+            if pos[0] == 7:
+                board[pos[0]][pos[1]] = Queen(self.Color)
 
 class Knight(Piece):
     #a list for the tuples for the knight moves (knight displacement)
@@ -734,6 +749,8 @@ class PGN(Board):
                     else:
                         if type(self.board[move[0]][move[1]]) == Pawn:
                             self.board[move[0]][move[1]].moves += 1
+                            self.board[move[0]][move[1]].promotion(self.board)
+                        self.update_pos()
                         self.total_moves += 1
                         self.string += self.notation_type(self.board[move[0]][move[1]])
                         self.string += self.notation_move(self.board[move[0]][move[1]], temp_hold, pos)
@@ -745,6 +762,8 @@ class PGN(Board):
                 else:
                     if type(self.board[move[0]][move[1]]) == Pawn:
                         self.board[move[0]][move[1]].moves += 1
+                        self.board[move[0]][move[1]].promotion(self.board)
+                    self.update_pos()
                     self.total_moves += 1
                     self.string += self.notation_type(self.board[move[0]][move[1]])
                     self.string += self.notation_move(self.board[move[0]][move[1]], temp_hold, pos)
@@ -783,6 +802,8 @@ class PGN(Board):
                 else:
                     if type(self.board[move[0]][move[1]]) == Pawn:
                         self.board[move[0]][move[1]].moves += 1
+                        self.board[move[0]][move[1]].promotion(self.board)
+                    self.update_pos()
                     self.total_moves += 1
                     self.string += self.notation_type(self.board[move[0]][move[1]])
                     self.string += self.notation_move(self.board[move[0]][move[1]], temp_hold, pos)
@@ -794,6 +815,8 @@ class PGN(Board):
             else:
                 if type(self.board[move[0]][move[1]]) == Pawn:
                     self.board[move[0]][move[1]].moves += 1
+                    self.board[move[0]][move[1]].promotion(self.board)
+                self.update_pos()
                 self.total_moves += 1
                 self.string += self.notation_type(self.board[move[0]][move[1]])
                 self.string += self.notation_move(self.board[move[0]][move[1]], temp_hold, pos)
