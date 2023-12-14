@@ -1,8 +1,12 @@
 import chess_game
 import unittest
+"""
+I do not know how many unit tests you would like but also I can't really add unit tests
+for my Game class since basically all the Game methods require some user input
+"""
 
-class chess_test(unittest.TestCase):
-    def test_pos(self):
+class Board_test(unittest.TestCase):
+    def test_positions(self):
         a = chess_game.Board()
         for i in range(8):
             for j in range(8):
@@ -23,15 +27,25 @@ class chess_test(unittest.TestCase):
                         pass
                 else:
                     pass
-                
+class Piece_test(unittest.TestCase):
+    def test_promotion(self):
+        #checking the pawn promotion
+        a = chess_game.Board()
+        a.board[1][1] = chess_game.Pawn('white')
+        a.update_pos()
+        a.place_move((1, 1), (0, 0))
+        self.assertEqual(type(a.board[0][0]), chess_game.Queen)
+    def test_rook_start_protecting(self):
+        a = chess_game.Board()
+        self.assertEqual(set(a.board[7][0].protecting(a.board)), {(7, 1), (6, 0)})
+    def test_start_cant_move(self):
+        a = chess_game.Board()
+        for i in a.board:
+            for j in i:
+                if j == a.EMPTY:
+                    pass
+                elif type(j) != chess_game.Pawn and type(j) != chess_game.Knight:
+                    self.assertFalse(j.available_moves(a.board))
     
-
-    """
-    def test_unique_id(self):
-        b1 = BankAccountTester.mkBA()
-        b2 = BankAccountTester.mkBA()
-        self.assertNotEqual(b1.getAccountId(), b2.getAccountId())
-        """
-
 if __name__ == '__main__':
     unittest.main()

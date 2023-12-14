@@ -1,14 +1,8 @@
-# Stuff to add to the README
-stuff to add when I finish stuff
-
-
-- A detailed explanation of how to use/run your program - if your program supports command line arguments, expects inputs in a particular file format, etc. the README should explain all of those details.
-
-# requirements
+# Requirements
 - there aren't any requirements to run my code, nothing needed to be installed, it is all done
 without importing any libraries, etc. (beside the unittests)
 
-# limitations
+# Limitations
 - just specific way of inputting moves: 
 When inputting, use the chess files such that file 'a' would be column of index 0
  and row 1 would be row of index 7 in an 8x8 matrix
@@ -47,7 +41,7 @@ The program will prompt you for the FILE of a PIECE to move,
 - kinda important one: if you pick a piece that has no legal moves available i.e. a rook/bishop/queen/king as the first move,
 the code will just keep asking you for moves since no move you enter will be legal, so if you do this, just ctrl+c it and rerun!
 
-# how to run/use program
+# How to run/use program
 should be a 'two' player game and there is no chess ai or anything like this, moves will only be played with inputs
 
 this was somewhat kind of explained in the limitations, but basically just run the chess_game.py file

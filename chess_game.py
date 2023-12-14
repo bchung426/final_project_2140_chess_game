@@ -25,18 +25,15 @@ class Board():
 
         the board is printed from a point of view of the player using
         the white pieces (white starting position will always appear at the bottom)
-
-        used basically the same stuff from the tictactoe; added stuff in to get 
-        the row/file labels as well as increased the spacing between rows b/c the spacing with
-        the chess piece characters are muy interesante 
         """
         #initial line of space
         self.show = '\n'
         #♚ ♔ ♖ ♜ ♝ ♗ ♛ ♕ ♞ ♘ ♟ ♙ 
-        """   put in README maybe! :
+        """
         the pieces_w used "black pieces" but since the background of vscode is black, the "white pieces"
         appear black since they are just a hollow outline of the piece, so the terminal you are using
-        might make these look different   """
+        might make these look different   
+        """
         self.pieces_w = {Pawn:'♟ ', Rook:'♜ ', Knight:'♞ ', Bishop:'♝ ', King:'♚ ', Queen:'♛ '}
         self.pieces_b = {Pawn:'♙ ', Rook:'♖ ', Knight:'♘ ', Bishop:'♗ ', King:'♔ ', Queen:'♕ '}
         for i in range(self.SIZE):
@@ -175,12 +172,6 @@ class Board():
                             continue
                         if type(self.board[i[0]][i[1]]) == King:
                             return (i[0], i[1])
-                        """
-                            if self.board[i[0]][i[1]].Color == King.white:
-                                return King.white
-                            if self.board[i[0]][i[1]].Color == King.black:
-                                return King.black 
-                        """
         return False
     
     def checkmate(self):
@@ -188,9 +179,7 @@ class Board():
         Returns the winner of the game (either Piece.white or Piece.black) 
         if there is checkmate. Otherwise returns None.
 
-        checks if a king is in check, and then checks if the king has any avai
-        TODO:
-        if a move would put the king out of 
+        checks if a king is in check, and then checks if a king has any available moves
 
         Will check if the there is check first.
         """
@@ -234,7 +223,7 @@ class Board():
     def is_occupied(self, pos):
         """
         Returns True if there is a piece at a certain position, and 
-        False if the index is not on the board or if position is empty
+        False if the index is not on the board or if the position is empty
         """
         row = pos[0]
         file = pos[1]
@@ -266,9 +255,8 @@ class Piece():
     indices of the piece in an 8x8 matrix
 
     ex: the position for the starting white rook in the 'a' file will be
-    represented by a tuple (7, 0) (row 7, column 0). When represented on the board, this
-    will appear to be the column of index 0 (1) and the row of index 7 (1)
-
+    represented by a tuple (7, 0). When represented on the board, this
+    will appear to be the column of index 0 (a) and the row of index 7 (1)
     """
     black = "black"
     white = "white"
@@ -385,12 +373,6 @@ class Pawn(Piece):
     def __init__(self, color = "white", moves = 0):
         super().__init__(color)
         self.moves = moves
-        """
-        if self.Color == self.white:
-            self.direction = -1
-        if self.Color == self.black:
-            self.direction = 1
-        """
 
     def is_first_move(self):
         """
@@ -409,8 +391,7 @@ class Pawn(Piece):
         if it is the pawn's first move, will be able to move 2 squares
         in the direction
 
-        will not be able to en passant (unless i have extra time but i cba)
-        !! seems to work, as well with the capture moves
+        will NOT be able to en passant 
         """
         move_list = []
         pos = self.position
@@ -469,8 +450,7 @@ class Pawn(Piece):
     
     def protecting(self, board):
         """
-        returns the legal squares where a pawn would be able to take
-        a piece if a piece were in the squares
+        returns the legal squares where a pawn would be "protecting"
         to be used for the line_of_sight method in the King class
         adds the move even if a piece of the same color is in it "protecting"
           like a knight outpost
@@ -496,6 +476,11 @@ class Pawn(Piece):
         return move_list
     
     def promotion(self, board):
+        """
+        takes in the board matrix as a parameter
+        autopromotes a pawn to a queen if a pawn reaches the
+        other end of the board
+        """
         pos = self.position
         if self.Color == self.white:
             if pos[0] == 0:
@@ -513,7 +498,6 @@ class Knight(Piece):
         """
         returns a list containing tuples of available moves for a knight.
         takes in parameters for the position and the board
-        !!seems to work
         """
         move_list = []
         pos = self.position
@@ -551,7 +535,6 @@ class Rook(Piece):
         """
         returns a list containing tuples of available moves for a rook.
         takes in parameters for the position and the board
-        !! seems to work!
         """
         return self.find_moves(self.position, self.Color, self.r_increments, board)
     
@@ -572,7 +555,6 @@ class Bishop(Piece):
         """
         returns a list containing tuples of available moves for a bishop.
         takes in parameters for the position and the board
-        !! seems to work!
         """
         return self.find_moves(self.position, self.Color, self.b_increments, board)
     
@@ -584,20 +566,14 @@ class Bishop(Piece):
         return self.protected(self.Color, self.b_increments, board)
     
 class King(Piece):
-    """
-    need to add methods for check, as well as methods for if other color pieces
-    will be able to see the king if it moves to a certain square in the Board class!!!
-    """
-    #same directions as the queen, but can only move 1 square
+    #same directional moves as the queen, but can only move 1 square
     king_disp = [(1,1), (1,-1), (-1,1), (-1,-1), (1,0), (-1,0), (0,1), (0,-1)]
     def __init__(self,color):
         super().__init__(color)
     def available_moves(self, board):
         """
         returns a list containing tuples of available moves for a king.
-        takes in parameters for the position and the baod
-        TODO: check for check, and if a move would put the king in line 
-        of sight of a piece of the opposite color
+        takes in parameters for the board
         """
         move_list = []
         pos = self.position
@@ -623,9 +599,9 @@ class King(Piece):
         also takes in the color as a parameter so it can check
         for the opposite color
 
-        the method is for the king, and is meant to return a new list of moves
-        with these squares that would be in line of sight and squares that have pieces
-        that are protected to be removed.
+        Returns a new list of moves, removing the squares that would be 
+        in line of sight of the other side's pieces and squares that are 
+        protected by the other side's pieces from the given list of moves (sorry if this wording was confusing)
         """
         bad_moves = set()
         for m in moves:
@@ -675,7 +651,6 @@ class Queen(Piece):
         """
         returns a list containing tuples of available moves for a queen
         takes in parameters for the position and the board
-        !! seems to work!
         """
         return self.find_moves(self.position, self.Color, self.q_increments, board)
     
@@ -695,13 +670,8 @@ class PGN(Board):
     def print_board(self):
         """
         prints the history of moves like a PGN
-
-        the board is printed from a point of view of the player using
-        the white pieces (white starting position will always appear at the bottom)
-
-        used basically the same stuff from the tictactoe; added stuff in to get 
-        the row/file labels as well as increased the spacing between rows b/c the spacing with
-        the chess piece characters are muy interesante 
+        also adds the move number to the printing string every time
+        white would move; adds a new line occasionally so lines don't get too long
         """
         if self.total_moves % 16 == 0:
             self.string += "\n"
@@ -714,9 +684,9 @@ class PGN(Board):
 
     def place_move(self, pos, move):
         """
-        same exact code as the method from Board, just added in the 
+        Very similar method as the method from Board, just added in the 
         parts to add to self.string before it would return true to add
-        the history of the move
+        the history of the moves including the special marks for check and checkmate
         """
         if pos[0] > 7 or pos[1] > 7 or pos[0] < 0 or pos[1] < 0 or move[0] > 7 or move[1] > 7 or move[0] < 0 or move[1] < 0:
             return False
@@ -835,7 +805,7 @@ class PGN(Board):
         """
         Takes in a piece that just moved as a parameter
         Depending on the piece type that is put in as a parameter,
-        will return a character that would represent the first part on the PGN
+        will return a character that would represent the first part of a move on the PGN
         """
         t = type(piece)
         if t == Pawn:
@@ -854,9 +824,9 @@ class PGN(Board):
         """
         Takes in 2 pieces and a position as parameters; the first piece is the piece that just moved; the second piece
         will be the temp_hold (either a piece or Board.EMPTY)
-        The position prev_pos will be a tuple of the position that the temp_hold was
+        The position prev_pos will be a tuple of the position that the pos was in place_move
         Depending on if a piece was taken as a result of moving (if the temp_hold has a piece or not)
-        will return the latter part of the PGN notation
+        will return the latter part of the PGN notation 
         """
         s = ''
         file_d = {0:'a', 1:'b', 2:'c', 3:'d', 4:'e', 5:'f', 6:'g', 7:'h'}
@@ -892,7 +862,7 @@ class Game():
         """
         This method executes a single turn by:
          - prompting the user for the position of the piece to move
-         - prompting the user for a legal move
+         - prompting the user for the square they want to move to
          - modifying the board
          - ending the current player's turn
         """
@@ -1031,6 +1001,8 @@ class Game():
     def play(self):
         """
         This method starts the game.
+        Asks the user if they want to have a board or PGN to display game, then
+        starts the game. 
         """
         disp = -1
         while int(disp) != 0 and int(disp) != 1:
@@ -1046,20 +1018,11 @@ class Game():
         self.Board.print_board()
         self.announce_winner()
 
-"""
-TODO:
-making the game play  - Done; 
-making a winner (finding checkmate)  should be easy - DONE 
--- one specific case it doesn't do it correctly with the incremental pieces; the
-
-adding the PGN as a subclass of Board which should just change the way the board is displayed (will use PGN notation instead)
-- DONE
-UPDATING PAWNS # OF MOVES - DONE
-"""                   
+            
 """
 a = Game()
 a.Board.print_board()
-
+i was testing by putting a piece in [3][0] in the start_pos method
 print(a.Board.board[3][0].position)
 print(a.Board.board[3][0].Color)
 print(type(a.Board.board[3][0]))
@@ -1067,7 +1030,4 @@ print(type(a.Board.board[3][0]))
 print(a.Board.board[3][0].available_moves(a.Board.board))
 a.play_turn() """
 
-Game().play()
-
-#print(a.board)
-#print(a.board[0][0].Color)
+#Game().play()
